@@ -1,0 +1,31 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless.hub"
+        },
+        {
+            "type": "minecraft:item_exists",
+            "item": "appliedenergistics2:controller"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "item": "ae2stuff:wireless",
+            "data": 32767
+        },
+        "b": {
+            "item": "appliedenergistics2:controller"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:wireless_hub",
+        "data": 0
+    }
+}

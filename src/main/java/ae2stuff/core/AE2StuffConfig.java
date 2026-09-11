@@ -17,6 +17,8 @@ public final class AE2StuffConfig extends Configuration {
 
     public static final String GROWTH_CHAMBER = "growthChamber";
     public static final String ADVANCED_INSCRIBER = "advancedInscriber";
+    public static final String WIRELESS = "wireless";
+    public static final String WIRELESS_HUB = "wireless.hub";
 
     private static AE2StuffConfig instance;
 
@@ -37,6 +39,15 @@ public final class AE2StuffConfig extends Configuration {
     private final int advancedInscriberSpeedPoints;
     private final int advancedInscriberCapacityCards;
     private final int advancedInscriberCapacityPoints;
+
+    private final boolean wirelessEnabled;
+    private final double wirelessPowerBase;
+    private final double wirelessPowerDistanceMultiplier;
+    private final int wirelessMaxRange;
+    private final boolean wirelessHubEnabled;
+    private final int wirelessHubMaxConnections;
+    private final double wirelessHubPowerBase;
+    private final double wirelessHubPowerDistanceMultiplier;
 
     private final boolean jeiGrowthChamberFluix;
 
@@ -64,6 +75,26 @@ public final class AE2StuffConfig extends Configuration {
                 "Power pressing one item costs (AE), spread over the cycle and multiplied by speed and batch.").getDouble());
         this.advancedInscriberCycleTicks = Math.max(1, this.get(ADVANCED_INSCRIBER, "cycleTicks", 50,
                 "Ticks one press takes without Acceleration Cards.").getInt());
+
+        this.wirelessEnabled = this.get(WIRELESS, "enabled", true,
+                "Whether the Wireless Connector, the Wireless Setup Kit and their recipes exist at all. Off takes the "
+                        + "Wireless Hub with them.").getBoolean();
+        this.wirelessPowerBase = Math.max(0, this.get(WIRELESS, "powerBase", 1D,
+                "Power a connector draws for its link before distance counts (AE/t).").getDouble());
+        this.wirelessPowerDistanceMultiplier = Math.max(0, this.get(WIRELESS, "powerDistanceMultiplier", 0.1D,
+                "A connector draws powerBase + powerDistanceMultiplier * distance * ln(distance^2 + 3) (AE/t).").getDouble());
+        this.wirelessMaxRange = Math.max(0, this.get(WIRELESS, "maxRange", 0,
+                "The farthest apart two ends can be linked, in blocks. Zero sets no limit.").getInt());
+
+        this.wirelessHubEnabled = this.get(WIRELESS_HUB, "enabled", true,
+                "Whether the Wireless Hub and its recipe exist.").getBoolean();
+        this.wirelessHubMaxConnections = Math.max(1, this.get(WIRELESS_HUB, "maxConnections", 32,
+                "How many Wireless Connectors one hub links to.").getInt());
+        this.wirelessHubPowerBase = Math.max(0, this.get(WIRELESS_HUB, "powerBase", 1D,
+                "Power a hub draws for each link before distance counts (AE/t).").getDouble());
+        this.wirelessHubPowerDistanceMultiplier = Math.max(0, this.get(WIRELESS_HUB, "powerDistanceMultiplier", 0.1D,
+                "A hub draws powerBase + powerDistanceMultiplier * distance * ln(distance^2 + 3) for each link (AE/t).")
+                .getDouble());
 
         this.setCategoryComment("upgrades.cards", "How many cards of a kind fit in each machine. Zero refuses "
                 + "the card there outright.");
@@ -98,6 +129,8 @@ public final class AE2StuffConfig extends Configuration {
         return switch (machine) {
             case GROWTH_CHAMBER -> this.growthChamberEnabled;
             case ADVANCED_INSCRIBER -> this.advancedInscriberEnabled;
+            case WIRELESS -> this.isWirelessEnabled();
+            case WIRELESS_HUB -> this.isWirelessHubEnabled();
             default -> false;
         };
     }
@@ -164,6 +197,38 @@ public final class AE2StuffConfig extends Configuration {
 
     public int getAdvancedInscriberCapacityPoints() {
         return this.advancedInscriberCapacityPoints;
+    }
+
+    public boolean isWirelessEnabled() {
+        return this.wirelessEnabled;
+    }
+
+    public double getWirelessPowerBase() {
+        return this.wirelessPowerBase;
+    }
+
+    public double getWirelessPowerDistanceMultiplier() {
+        return this.wirelessPowerDistanceMultiplier;
+    }
+
+    public int getWirelessMaxRange() {
+        return this.wirelessMaxRange;
+    }
+
+    public boolean isWirelessHubEnabled() {
+        return this.wirelessEnabled && this.wirelessHubEnabled;
+    }
+
+    public int getWirelessHubMaxConnections() {
+        return this.wirelessHubMaxConnections;
+    }
+
+    public double getWirelessHubPowerBase() {
+        return this.wirelessHubPowerBase;
+    }
+
+    public double getWirelessHubPowerDistanceMultiplier() {
+        return this.wirelessHubPowerDistanceMultiplier;
     }
 
     public boolean isJeiGrowthChamberFluix() {

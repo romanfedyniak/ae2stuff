@@ -1,0 +1,29 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "item": "ae2stuff:wireless",
+            "data": 32767
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "dyeBlack"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:wireless",
+        "data": 16,
+        "count": 8
+    }
+}

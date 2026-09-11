@@ -1,0 +1,29 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless.hub"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "item": "ae2stuff:wireless_hub",
+            "data": 32767
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "dyeCyan"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:wireless_hub",
+        "data": 10,
+        "count": 8
+    }
+}

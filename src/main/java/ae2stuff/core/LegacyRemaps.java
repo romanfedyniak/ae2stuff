@@ -22,6 +22,7 @@ import appeng.api.AEApi;
 public final class LegacyRemaps {
 
     private static final ResourceLocation VISUALISER = new ResourceLocation(Tags.MOD_ID, "visualiser");
+    private static final ResourceLocation ADVANCED_WIRELESS_KIT = new ResourceLocation(Tags.MOD_ID, "adv_wireless_kit");
 
     private LegacyRemaps() {
     }
@@ -32,6 +33,8 @@ public final class LegacyRemaps {
             if (VISUALISER.equals(mapping.key)) {
                 // AE2UD's visualiser can be switched off, and then the old one is simply dropped
                 AEApi.instance().definitions().items().networkVisualiser().maybeItem().ifPresent(mapping::remap);
+            } else if (ADVANCED_WIRELESS_KIT.equals(mapping.key) && Registration.wirelessKit != null) {
+                mapping.remap(Registration.wirelessKit);
             }
         }
     }

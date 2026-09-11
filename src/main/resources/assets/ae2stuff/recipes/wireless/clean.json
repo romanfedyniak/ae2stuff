@@ -1,0 +1,22 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless"
+        }
+    ],
+    "type": "forge:ore_shapeless",
+    "ingredients": [
+        {
+            "item": "ae2stuff:wireless",
+            "data": 32767
+        },
+        {
+            "item": "minecraft:water_bucket"
+        }
+    ],
+    "result": {
+        "item": "ae2stuff:wireless",
+        "data": 0
+    }
+}

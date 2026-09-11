@@ -1,0 +1,48 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.purified_fluix_crystal"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.engineering_processor"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.wireless"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aba",
+        "cdc",
+        "aba"
+    ],
+    "key": {
+        "a": {
+            "type": "appliedenergistics2:part",
+            "part": "material.purified_fluix_crystal"
+        },
+        "b": {
+            "type": "appliedenergistics2:part",
+            "part": "material.engineering_processor"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "d": {
+            "type": "appliedenergistics2:part",
+            "part": "material.wireless"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:wireless",
+        "data": 0
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "wireless"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.engineering_processor"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.wireless"
+        },
+        {
+            "type": "minecraft:item_exists",
+            "item": "appliedenergistics2:network_tool"
+        }
+    ],
+    "type": "forge:ore_shapeless",
+    "ingredients": [
+        {
+            "type": "appliedenergistics2:part",
+            "part": "material.engineering_processor"
+        },
+        {
+            "type": "appliedenergistics2:part",
+            "part": "material.wireless"
+        },
+        {
+            "item": "appliedenergistics2:network_tool"
+        }
+    ],
+    "result": {
+        "item": "ae2stuff:wireless_kit"
+    }
+}

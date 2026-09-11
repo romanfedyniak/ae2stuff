@@ -1,22 +1,209 @@
 {
-  "forge_marker": 1,
-  "defaults": {
-    "model": "minecraft:cube_all",
-    "textures": {
-      "all": "ae2stuff:blocks/wireless/side_off"
+    "forge_marker": 1,
+    "variants": {
+        "active=false,color=white": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_white"
+            }
+        },
+        "active=false,color=orange": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_orange"
+            }
+        },
+        "active=false,color=magenta": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_magenta"
+            }
+        },
+        "active=false,color=light_blue": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_light_blue"
+            }
+        },
+        "active=false,color=yellow": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_yellow"
+            }
+        },
+        "active=false,color=lime": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_lime"
+            }
+        },
+        "active=false,color=pink": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_pink"
+            }
+        },
+        "active=false,color=gray": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_gray"
+            }
+        },
+        "active=false,color=light_gray": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_light_gray"
+            }
+        },
+        "active=false,color=cyan": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_cyan"
+            }
+        },
+        "active=false,color=purple": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_purple"
+            }
+        },
+        "active=false,color=blue": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_blue"
+            }
+        },
+        "active=false,color=brown": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_brown"
+            }
+        },
+        "active=false,color=green": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_green"
+            }
+        },
+        "active=false,color=red": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_red"
+            }
+        },
+        "active=false,color=black": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_black"
+            }
+        },
+        "active=false,color=transparent": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_off_transparent"
+            }
+        },
+        "active=true,color=white": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_white"
+            }
+        },
+        "active=true,color=orange": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_orange"
+            }
+        },
+        "active=true,color=magenta": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_magenta"
+            }
+        },
+        "active=true,color=light_blue": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_light_blue"
+            }
+        },
+        "active=true,color=yellow": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_yellow"
+            }
+        },
+        "active=true,color=lime": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_lime"
+            }
+        },
+        "active=true,color=pink": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_pink"
+            }
+        },
+        "active=true,color=gray": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_gray"
+            }
+        },
+        "active=true,color=light_gray": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_light_gray"
+            }
+        },
+        "active=true,color=cyan": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_cyan"
+            }
+        },
+        "active=true,color=purple": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_purple"
+            }
+        },
+        "active=true,color=blue": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_blue"
+            }
+        },
+        "active=true,color=brown": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_brown"
+            }
+        },
+        "active=true,color=green": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_green"
+            }
+        },
+        "active=true,color=red": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_red"
+            }
+        },
+        "active=true,color=black": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_black"
+            }
+        },
+        "active=true,color=transparent": {
+            "model": "minecraft:cube_all",
+            "textures": {
+                "all": "ae2stuff:blocks/wireless_hub/side_on_transparent"
+            }
+        }
     }
-  },
-  "variants": {
-    "active": {
-      "true": {
-        "model": "ae2stuff:builtin/wireless_hub"
-      },
-      "false": {
-        "model": "ae2stuff:builtin/wireless_hub"
-      }
-    },
-    "inventory": [
-      {}
-    ]
-  }
 }

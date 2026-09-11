@@ -62,3 +62,33 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 - An inscriber placed with the old mod keeps its plates, input, output, cards and stored power. What it was in the
   middle of pressing is handed to the output rather than lost.
 - HEI lists it beside AE2UD's Inscriber recipes.
+
+### Wireless Connector and Wireless Hub
+
+- **A link comes back by itself.** Linking two ends pairs them until one of them is broken or linked elsewhere. When
+  either end's chunk unloads the link drops, and the connector makes it again as soon as both ends are loaded. It
+  checks every second that the link is still up. A link that failed to come back used to stay down for good.
+- **Channels are AE2UD channel tiers**, `ae2stuff:wireless_connector` and `ae2stuff:wireless_hub`, 32 each as
+  before, in AE2UD's `[ChannelTiers]` config. The hub's number can be raised. Both blocks' tooltips say how many
+  channels they carry, and the hub's how many connectors it links.
+- **The colour is a real network colour.** A coloured connector or hub joins only cables of the same colour or fluix
+  ones next to it, as a cable does. It is painted with AE2UD's Color Applicator, by right-clicking it with a dye, or
+  by crafting eight of them around a dye; one crafted with a water bucket turns fluix again. Colours stack
+  separately.
+- Looking at a connector or a hub draws a line to every end it is paired with, in the connector's colour, however
+  many links a hub has. AE2UD's Network Visualiser draws wireless links in the connector's colour too.
+- Waila and The One Probe show what a connector is linked to or waiting for, how many links a hub has, the channels
+  in use, the power drawn and the colour.
+- A link draws power at both ends while it is up, by the old formula.
+- Links stay within one dimension and load no chunks.
+- `config/ae2stuff.cfg` has a `wireless` section: whether connectors and the Wireless Setup Kit exist, their power
+  formula, and `maxRange`, the farthest apart two ends can be linked, with no limit by default. `wireless.hub`
+  switches the hub off on its own and sets how many connectors it links and its power formula. Switching `wireless`
+  off takes the hub with it.
+- Connectors and hubs placed with the old mod keep their links, colour, name and owner.
+
+### Wireless Setup Kit
+
+- It links as before: click one end, then the other, and sneak-right-click the air to clear it. It refuses networks
+  the player may not build on, two hubs, a full hub and ends too far apart.
+- **The Advanced Wireless Setup Kit is removed.** One already in a world or an inventory becomes a Wireless Setup Kit.

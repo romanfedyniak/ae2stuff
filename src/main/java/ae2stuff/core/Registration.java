@@ -22,8 +22,12 @@ import net.minecraftforge.registries.IForgeRegistry;
 import ae2stuff.Tags;
 import ae2stuff.block.BlockAdvancedInscriber;
 import ae2stuff.block.BlockGrowthChamber;
+import ae2stuff.block.BlockWireless;
+import ae2stuff.item.ItemWirelessKit;
 import ae2stuff.tile.TileAdvancedInscriber;
 import ae2stuff.tile.TileGrowthChamber;
+import ae2stuff.tile.TileWirelessConnector;
+import ae2stuff.tile.TileWirelessHub;
 import appeng.api.AEApi;
 import appeng.api.upgrades.CardTrait;
 import appeng.api.upgrades.CardTraits;
@@ -43,11 +47,20 @@ public final class Registration {
 
     public static final String GROWTH_CHAMBER = "grower";
     public static final String ADVANCED_INSCRIBER = "inscriber";
+    public static final String WIRELESS_CONNECTOR = "wireless";
+    public static final String WIRELESS_HUB = "wireless_hub";
+    public static final String WIRELESS_KIT = "wireless_kit";
 
     @Nullable
     public static BlockGrowthChamber growthChamber;
     @Nullable
     public static BlockAdvancedInscriber advancedInscriber;
+    @Nullable
+    public static BlockWireless wirelessConnector;
+    @Nullable
+    public static BlockWireless wirelessHub;
+    @Nullable
+    public static ItemWirelessKit wirelessKit;
 
     private Registration() {
     }
@@ -61,6 +74,13 @@ public final class Registration {
         }
         if (config.isAdvancedInscriberEnabled()) {
             advancedInscriber = register(event.getRegistry(), new BlockAdvancedInscriber(), ADVANCED_INSCRIBER, TileAdvancedInscriber.class);
+        }
+        if (config.isWirelessEnabled()) {
+            wirelessConnector = register(event.getRegistry(), new BlockWireless(TileWirelessConnector.class), WIRELESS_CONNECTOR,
+                    TileWirelessConnector.class);
+        }
+        if (config.isWirelessHubEnabled()) {
+            wirelessHub = register(event.getRegistry(), new BlockWireless(TileWirelessHub.class), WIRELESS_HUB, TileWirelessHub.class);
         }
     }
 
@@ -78,10 +98,17 @@ public final class Registration {
 
     @SubscribeEvent
     public static void registerItems(final RegistryEvent.Register<Item> event) {
-        for (final Block block : new Block[] { growthChamber, advancedInscriber }) {
+        for (final Block block : new Block[] { growthChamber, advancedInscriber, wirelessConnector, wirelessHub }) {
             if (block != null) {
                 event.getRegistry().register(new AEBaseItemBlock(block).setRegistryName(block.getRegistryName()));
             }
+        }
+
+        if (wirelessConnector != null) {
+            wirelessKit = new ItemWirelessKit();
+            wirelessKit.setRegistryName(Tags.MOD_ID, WIRELESS_KIT);
+            wirelessKit.setTranslationKey(Tags.MOD_ID + "." + WIRELESS_KIT);
+            event.getRegistry().register(wirelessKit);
         }
     }
 
