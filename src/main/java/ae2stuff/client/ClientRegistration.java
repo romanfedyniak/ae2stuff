@@ -58,7 +58,14 @@ public final class ClientRegistration {
         }
     }
 
-    public static void registerVisualiserStyles() {
+    /**
+     * Client init, while anything wireless is switched on.
+     */
+    public static void init() {
+        if (Registration.wirelessKit != null) {
+            KitKeyHandler.register();
+        }
+
         for (final AEColor color : AEColor.values()) {
             NetworkVisualiserStyles.register(WirelessVisualiserProvider.styleFor(color),
                     new VisualiserStyle(0xFF000000 | color.mediumVariant));

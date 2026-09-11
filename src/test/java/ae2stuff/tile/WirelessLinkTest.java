@@ -59,6 +59,13 @@ class WirelessLinkTest {
     }
 
     @Test
+    void queuedHubSlotsCountAgainstItsRoom() {
+        assertEquals(22, WirelessLink.freeHubSlots(32, 10, 0));
+        assertEquals(2, WirelessLink.freeHubSlots(32, 10, 20));
+        assertEquals(0, WirelessLink.freeHubSlots(32, 30, 5));
+    }
+
+    @Test
     void zeroRangeMeansNoLimit() {
         assertTrue(WirelessLink.inRange(0, 1e6));
         assertTrue(WirelessLink.inRange(16, 16));

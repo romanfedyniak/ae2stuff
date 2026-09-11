@@ -19,6 +19,7 @@ public final class AE2StuffConfig extends Configuration {
     public static final String ADVANCED_INSCRIBER = "advancedInscriber";
     public static final String WIRELESS = "wireless";
     public static final String WIRELESS_HUB = "wireless.hub";
+    public static final String WIRELESS_KIT = "wireless.kit";
 
     private static AE2StuffConfig instance;
 
@@ -48,6 +49,7 @@ public final class AE2StuffConfig extends Configuration {
     private final int wirelessHubMaxConnections;
     private final double wirelessHubPowerBase;
     private final double wirelessHubPowerDistanceMultiplier;
+    private final boolean wirelessKitQueueMode;
 
     private final boolean jeiGrowthChamberFluix;
 
@@ -95,6 +97,10 @@ public final class AE2StuffConfig extends Configuration {
         this.wirelessHubPowerDistanceMultiplier = Math.max(0, this.get(WIRELESS_HUB, "powerDistanceMultiplier", 0.1D,
                 "A hub draws powerBase + powerDistanceMultiplier * distance * ln(distance^2 + 3) for each link (AE/t).")
                 .getDouble());
+
+        this.wirelessKitQueueMode = this.get(WIRELESS_KIT, "queueMode", true,
+                "Whether the Wireless Setup Kit has its queue mode, which queues many ends and links them one after "
+                        + "another.").getBoolean();
 
         this.setCategoryComment("upgrades.cards", "How many cards of a kind fit in each machine. Zero refuses "
                 + "the card there outright.");
@@ -229,6 +235,10 @@ public final class AE2StuffConfig extends Configuration {
 
     public double getWirelessHubPowerDistanceMultiplier() {
         return this.wirelessHubPowerDistanceMultiplier;
+    }
+
+    public boolean isWirelessKitQueueModeEnabled() {
+        return this.wirelessKitQueueMode;
     }
 
     public boolean isJeiGrowthChamberFluix() {

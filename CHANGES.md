@@ -89,6 +89,19 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 
 ### Wireless Setup Kit
 
-- It links as before: click one end, then the other, and sneak-right-click the air to clear it. It refuses networks
-  the player may not build on, two hubs, a full hub and ends too far apart.
-- **The Advanced Wireless Setup Kit is removed.** One already in a world or an inventory becomes a Wireless Setup Kit.
+- **One kit with modes.** Holding the kit's key, Left Alt by default and set in Controls, and right-clicking the air
+  switches mode, and the tooltip says so. A mode switched off in the config's `wireless.kit` section is skipped.
+- **Simple mode** links as before: click one end, then the other, and sneak-right-click the air to clear it.
+- **Queue mode** is what the Advanced Wireless Setup Kit did. Sneak-right-clicking the air switches between adding
+  and linking.
+  - Adding queues the clicked connector, or one slot of the clicked hub, or with the key held all of the hub's free
+    slots.
+  - Linking links the next queued end to the clicked one, or with the key held on a hub, queued ends one after another
+    until the hub is full.
+  - The key with a sneak-right-click clears the queue. The tooltip lists the first ten queued ends.
+- **A hub can no longer be queued past its free slots.** Its slots already in the queue count against it, which they
+  did not.
+- Both modes refuse networks the player may not build on, two hubs, a full hub and ends too far apart. A queued end
+  that is gone or fails to link leaves the queue with a message; one waiting for a full hub stays.
+- **The Advanced Wireless Setup Kit is removed.** One already in a world or an inventory becomes a Wireless Setup Kit
+  in queue mode, keeping its queue.

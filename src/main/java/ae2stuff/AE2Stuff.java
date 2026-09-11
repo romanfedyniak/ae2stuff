@@ -21,6 +21,7 @@ import ae2stuff.core.AE2StuffConfig;
 import ae2stuff.core.ModGuiHandler;
 import ae2stuff.core.Registration;
 import ae2stuff.integration.visualiser.WirelessVisualiserProvider;
+import ae2stuff.network.ModNetwork;
 import ae2stuff.tile.TileWirelessConnector;
 import ae2stuff.tile.TileWirelessHub;
 import appeng.api.AEApi;
@@ -44,6 +45,7 @@ public final class AE2Stuff {
     @Mod.EventHandler
     public void preInit(final FMLPreInitializationEvent event) {
         AE2StuffConfig.init(event.getModConfigurationDirectory());
+        ModNetwork.init();
 
         // A tier registered after pre-initialisation never reaches AE2UD's config
         final AE2StuffConfig config = AE2StuffConfig.instance();
@@ -64,7 +66,7 @@ public final class AE2Stuff {
         if (AE2StuffConfig.instance().isWirelessEnabled()) {
             NetworkVisualisers.register(new WirelessVisualiserProvider());
             if (event.getSide().isClient()) {
-                ClientRegistration.registerVisualiserStyles();
+                ClientRegistration.init();
             }
         }
 

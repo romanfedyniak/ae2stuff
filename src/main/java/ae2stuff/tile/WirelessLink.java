@@ -69,6 +69,13 @@ public final class WirelessLink {
     }
 
     /**
+     * How many more times a hub can be queued: its slots taken by paired connectors and by queued entries both count.
+     */
+    public static int freeHubSlots(final int maxConnections, final int linked, final int queued) {
+        return Math.max(0, maxConnections - linked - queued);
+    }
+
+    /**
      * @param maxRange in blocks, or 0 for no limit
      */
     public static boolean inRange(final int maxRange, final double distance) {
