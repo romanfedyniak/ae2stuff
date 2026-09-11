@@ -1,0 +1,43 @@
+# Publishes built jars to GitHub Releases, the only place this mod is distributed.
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # any semver tag, e.g. v1.2.3
+  # Lets a release be re-run against a tag that is already pushed, instead of deleting and re-pushing it.
+  workflow_dispatch:
+
+jobs:
+  Publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # needed to create GitHub releases
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the mod version comes from `git describe`, which needs the tags
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '25' # the Gradle process only; the mod still compiles to Java 8 bytecode
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          add-job-summary: never
+
+      - name: Build Project
+        run: ./gradlew build
+
+      - name: Publish to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          files: "build/libs/*.jar"
+          generate_release_notes: true
+          fail_on_unmatched_files: true
