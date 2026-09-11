@@ -1,0 +1,41 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "growthChamber"
+        },
+        {
+            "type": "minecraft:item_exists",
+            "item": "appliedenergistics2:quartz_growth_accelerator"
+        },
+        {
+            "type": "appliedenergistics2:part_exists",
+            "part": "cable_glass.fluix"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aba",
+        "aca",
+        "ada"
+    ],
+    "key": {
+        "a": {
+            "item": "appliedenergistics2:quartz_growth_accelerator"
+        },
+        "b": {
+            "item": "minecraft:hopper"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "chestWood"
+        },
+        "d": {
+            "type": "appliedenergistics2:part",
+            "part": "cable_glass.fluix"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:grower"
+    }
+}

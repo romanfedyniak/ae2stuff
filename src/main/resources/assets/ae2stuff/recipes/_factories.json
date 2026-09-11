@@ -1,0 +1,5 @@
+{
+    "conditions": {
+        "enabled": "ae2stuff.core.EnabledCondition"
+    }
+}

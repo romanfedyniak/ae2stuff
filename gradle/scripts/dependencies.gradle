@@ -50,8 +50,11 @@ dependencies {
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
     runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
 
-    implementation 'com.github.romanfedyniak:AE2UD:c615c36659'
-    runtimeOnly 'mezz:jei:4.34.0'
+    implementation rfg.deobf('com.github.romanfedyniak:AE2UD:321bc32543')
+    implementation 'mezz:jei:4.34.0'
+    compileOnly rfg.deobf('curse.maven:top-245211:2667280')
+    compileOnly 'curse.maven:hwyla-253449:2568751'
+    compileOnly rfg.deobf('curse.maven:mouse-tweaks-unofficial-461660:5876158')
 
     // Example - Dependency descriptor:
     // 'com.google.code.gson:gson:2.8.6' << group: com.google.code.gson, name:gson, version:2.8.6
