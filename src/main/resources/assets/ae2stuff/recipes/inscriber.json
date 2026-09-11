@@ -1,0 +1,41 @@
+{
+    "conditions": [
+        {
+            "type": "ae2stuff:enabled",
+            "machine": "advancedInscriber"
+        },
+        {
+            "type": "minecraft:item_exists",
+            "item": "appliedenergistics2:inscriber"
+        },
+        {
+            "type": "appliedenergistics2:material_exists",
+            "material": "material.engineering_processor"
+        }
+    ],
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "aba",
+        "cdc",
+        "aba"
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "item": "minecraft:hopper"
+        },
+        "c": {
+            "type": "appliedenergistics2:part",
+            "part": "material.engineering_processor"
+        },
+        "d": {
+            "item": "appliedenergistics2:inscriber"
+        }
+    },
+    "result": {
+        "item": "ae2stuff:inscriber"
+    }
+}

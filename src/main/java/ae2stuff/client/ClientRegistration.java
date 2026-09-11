@@ -6,6 +6,7 @@
 
 package ae2stuff.client;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -25,9 +26,11 @@ public final class ClientRegistration {
 
     @SubscribeEvent
     public static void registerModels(final ModelRegistryEvent event) {
-        if (Registration.growthChamber != null) {
-            ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(Registration.growthChamber), 0,
-                    new ModelResourceLocation(Registration.growthChamber.getRegistryName(), "inventory"));
+        for (final Block block : new Block[] { Registration.growthChamber, Registration.advancedInscriber }) {
+            if (block != null) {
+                ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block), 0,
+                        new ModelResourceLocation(block.getRegistryName(), "inventory"));
+            }
         }
     }
 }

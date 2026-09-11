@@ -39,3 +39,26 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 - HEI lists the chamber beside AE2UD's recipes for growing crystal seeds, and shows fluix made in it as a recipe of
   its own, which can be switched off in the config's `jei` section.
 - Waila and The One Probe say how many stacks are growing.
+
+### Advanced Inscriber
+
+- **It presses twice as fast as AE2UD's Inscriber**: an item takes 50 ticks rather than 100 with no Acceleration
+  Cards, for the same 1000 AE, so it draws twice the power while it works.
+- **It works a batch at a time.** Every point of capacity from its Capacity Cards presses one more item in the
+  same cycle, as long as the input, the plates the recipe uses up and the room in the output allow for them.
+  Acceleration Cards still shorten the cycle, and power is charged for every item in the batch.
+- It has AE2UD's Inscriber's three buttons: **Automation Access Mode**, which decides whether each face reaches
+  one part of the machine or all of it, **Auto-Export**, and **Input Slot Stack Size**. With separate faces, the
+  top and bottom faces reach the plates. Access mode takes the place of the two lock toggles it had, since plates
+  can only be taken out through their own faces anyway.
+- Its five upgrade slots take up to five Acceleration Cards and three Capacity Cards, and they compete for the
+  slots.
+- It renames with a Name Press, as AE2UD's Inscriber does.
+- **Power comes from the network when its own store runs dry**, instead of the inscriber stopping until the store
+  has refilled.
+- Every number is in `config/ae2stuff.cfg`: whether it exists at all, its power store and idle draw, what pressing
+  one item costs and how long it takes, and how many of each card it takes and how many of their points count.
+- Breaking it drops what is in it and its cards, and the block comes back as a plain item that stacks.
+- An inscriber placed with the old mod keeps its plates, input, output, cards and stored power. What it was in the
+  middle of pressing is handed to the output rather than lost.
+- HEI lists it beside AE2UD's Inscriber recipes.

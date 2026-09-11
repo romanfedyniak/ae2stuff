@@ -26,6 +26,7 @@ public final class AE2StuffJeiPlugin implements IModPlugin {
 
     /** AE2UD's category for seeds growing; it skips a catalyst whose category is switched off. */
     private static final String CERTUS_GROWTH = "appliedenergistics2.certus_growth";
+    private static final String INSCRIBER = "appliedenergistics2.inscriber";
 
     @Override
     public void registerCategories(final IRecipeCategoryRegistration registry) {
@@ -37,6 +38,10 @@ public final class AE2StuffJeiPlugin implements IModPlugin {
 
     @Override
     public void register(final IModRegistry registry) {
+        if (Registration.advancedInscriber != null) {
+            registry.addRecipeCatalyst(new ItemStack(Registration.advancedInscriber), INSCRIBER);
+        }
+
         if (Registration.growthChamber == null) {
             return;
         }

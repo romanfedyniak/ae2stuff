@@ -1,4 +1,5 @@
 tile.ae2stuff.grower.name=Crystal Growth Chamber
+tile.ae2stuff.inscriber.name=Advanced Inscriber
 gui.ae2stuff.grower.output=Output
 waila.ae2stuff.grower.growing=Stacks growing: %d
 top.ae2stuff.grower.growing=Stacks growing:
