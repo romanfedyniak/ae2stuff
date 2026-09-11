@@ -12,6 +12,7 @@ import java.util.Collections;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
+import ae2stuff.client.gui.GuiWirelessKit;
 import ae2stuff.core.AE2StuffConfig;
 import ae2stuff.core.Registration;
 import appeng.api.AEApi;
@@ -38,6 +39,9 @@ public final class AE2StuffJeiPlugin implements IModPlugin {
 
     @Override
     public void register(final IModRegistry registry) {
+        // No properties means HEI draws nothing beside the kit's manager, which only needs the room
+        registry.addGuiScreenHandler(GuiWirelessKit.class, gui -> null);
+
         if (Registration.advancedInscriber != null) {
             registry.addRecipeCatalyst(new ItemStack(Registration.advancedInscriber), INSCRIBER);
         }

@@ -50,6 +50,7 @@ public final class AE2StuffConfig extends Configuration {
     private final double wirelessHubPowerBase;
     private final double wirelessHubPowerDistanceMultiplier;
     private final boolean wirelessKitQueueMode;
+    private final boolean wirelessKitManagerMode;
 
     private final boolean jeiGrowthChamberFluix;
 
@@ -101,6 +102,9 @@ public final class AE2StuffConfig extends Configuration {
         this.wirelessKitQueueMode = this.get(WIRELESS_KIT, "queueMode", true,
                 "Whether the Wireless Setup Kit has its queue mode, which queues many ends and links them one after "
                         + "another.").getBoolean();
+        this.wirelessKitManagerMode = this.get(WIRELESS_KIT, "managerMode", true,
+                "Whether the Wireless Setup Kit has its manager mode, a window listing the connectors and hubs of chosen "
+                        + "networks.").getBoolean();
 
         this.setCategoryComment("upgrades.cards", "How many cards of a kind fit in each machine. Zero refuses "
                 + "the card there outright.");
@@ -239,6 +243,10 @@ public final class AE2StuffConfig extends Configuration {
 
     public boolean isWirelessKitQueueModeEnabled() {
         return this.wirelessKitQueueMode;
+    }
+
+    public boolean isWirelessKitManagerModeEnabled() {
+        return this.wirelessKitManagerMode;
     }
 
     public boolean isJeiGrowthChamberFluix() {

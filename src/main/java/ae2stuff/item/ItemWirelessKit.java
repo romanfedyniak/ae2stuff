@@ -32,18 +32,21 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import ae2stuff.AE2Stuff;
 import ae2stuff.client.KitKeyHandler;
 import ae2stuff.core.AE2StuffConfig;
+import ae2stuff.core.ModGuiHandler;
 import ae2stuff.tile.TileWirelessBase;
 import ae2stuff.tile.TileWirelessHub;
 import ae2stuff.tile.WirelessLink;
+import appeng.api.networking.IGridHost;
 import appeng.core.CreativeTab;
 import appeng.items.AEBaseItem;
 
 /**
  * Links connectors to connectors and hubs. Simple mode links two clicked ends; queue mode, which the old Advanced
- * Wireless Setup Kit had, queues many and links them one after another. The kit's key with a right-click in the air
- * switches mode.
+ * Wireless Setup Kit had, queues many and links them one after another; manager mode opens a window over the
+ * devices of chosen networks. The kit's key with a right-click in the air switches mode.
  */
 public final class ItemWirelessKit extends AEBaseItem {
 
@@ -58,7 +61,8 @@ public final class ItemWirelessKit extends AEBaseItem {
 
     public enum Mode {
         SIMPLE,
-        QUEUE;
+        QUEUE,
+        MANAGER;
 
         private String id() {
             return this.name().toLowerCase(Locale.ROOT);
@@ -81,9 +85,18 @@ public final class ItemWirelessKit extends AEBaseItem {
         final Mode mode = modeOf(tag);
         final boolean key = KitKey.isHeld(player);
         if (key && player.isSneaking()) {
+            if (mode == Mode.MANAGER) {
+                return new ActionResult<>(EnumActionResult.PASS, stack);
+            }
             clear(tag, mode, player);
         } else if (key) {
             switchMode(tag, mode, player);
+        } else if (mode == Mode.MANAGER) {
+            if (player.isSneaking()) {
+                return new ActionResult<>(EnumActionResult.PASS, stack);
+            }
+            player.openGui(AE2Stuff.instance, ModGuiHandler.WIRELESS_KIT, world, hand.ordinal(), 0, 0);
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         } else if (player.isSneaking() && mode == Mode.QUEUE) {
             toggleLinking(tag, player);
         } else if (player.isSneaking() && hasBinding(tag)) {
@@ -94,6 +107,31 @@ public final class ItemWirelessKit extends AEBaseItem {
 
         save(stack, tag);
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+    }
+
+    /**
+     * Manager mode acts before the block does, so clicking a drive or an interface lists its network instead of
+     * opening it.
+     */
+    @Override
+    public EnumActionResult onItemUseFirst(final EntityPlayer player, final World world, final BlockPos pos, final EnumFacing side,
+            final float hitX, final float hitY, final float hitZ, final EnumHand hand) {
+        final ItemStack stack = player.getHeldItem(hand);
+        if (!(world.getTileEntity(pos) instanceof IGridHost) || modeOf(view(stack)) != Mode.MANAGER) {
+            return EnumActionResult.PASS;
+        }
+        if (world.isRemote) {
+            return EnumActionResult.SUCCESS;
+        }
+
+        final NBTTagCompound tag = data(stack);
+        if (player.isSneaking()) {
+            KitNetworks.remove(tag, world, pos, side, player);
+        } else {
+            KitNetworks.add(tag, world, pos, side, player);
+        }
+        save(stack, tag);
+        return EnumActionResult.SUCCESS;
     }
 
     @Override
@@ -111,7 +149,9 @@ public final class ItemWirelessKit extends AEBaseItem {
         final Mode mode = modeOf(tag);
         final boolean key = KitKey.isHeld(player);
 
-        if (key && player.isSneaking()) {
+        if (mode == Mode.MANAGER) {
+            return EnumActionResult.PASS;
+        } else if (key && player.isSneaking()) {
             clear(tag, mode, player);
         } else if (mode == Mode.QUEUE && player.isSneaking()) {
             toggleLinking(tag, player);
@@ -256,16 +296,13 @@ public final class ItemWirelessKit extends AEBaseItem {
 
     private static void report(final EntityPlayer player, final WirelessLinker.Result result, final TileWirelessBase source,
             final TileWirelessBase target) {
-        final BlockPos pos = source.getPos();
-        switch (result) {
-            case LINKED -> message(player, TextFormatting.GREEN, "connected", pos.getX(), pos.getY(), pos.getZ());
-            case NOT_ALLOWED -> message(player, TextFormatting.RED, "security.player");
-            case TWO_HUBS -> message(player, TextFormatting.RED, "two_hubs");
-            case HUB_FULL -> message(player, TextFormatting.RED, "hub_full");
-            case TOO_FAR -> message(player, TextFormatting.RED, "too_far", (int) Math.ceil(WirelessLinker.distance(source, target)),
-                    AE2StuffConfig.instance().getWirelessMaxRange());
-            case SECURITY -> message(player, TextFormatting.RED, "security.network");
-            case FAILED -> message(player, TextFormatting.RED, "failed");
+        if (result == WirelessLinker.Result.LINKED) {
+            final BlockPos pos = source.getPos();
+            message(player, TextFormatting.GREEN, "connected", pos.getX(), pos.getY(), pos.getZ());
+        } else {
+            final ITextComponent text = WirelessLinker.describe(result, source, target);
+            text.getStyle().setColor(TextFormatting.RED);
+            player.sendStatusMessage(text, true);
         }
     }
 
@@ -305,25 +342,35 @@ public final class ItemWirelessKit extends AEBaseItem {
     }
 
     private static List<Mode> enabledModes() {
+        final AE2StuffConfig config = AE2StuffConfig.instance();
         final List<Mode> modes = new ArrayList<>();
         modes.add(Mode.SIMPLE);
-        if (AE2StuffConfig.instance().isWirelessKitQueueModeEnabled()) {
+        if (config.isWirelessKitQueueModeEnabled()) {
             modes.add(Mode.QUEUE);
+        }
+        if (config.isWirelessKitManagerModeEnabled()) {
+            modes.add(Mode.MANAGER);
         }
         return modes;
     }
 
     private static Mode modeOf(final NBTTagCompound tag) {
-        return Mode.QUEUE.id().equals(tag.getString(MODE)) && AE2StuffConfig.instance().isWirelessKitQueueModeEnabled()
-                ? Mode.QUEUE
-                : Mode.SIMPLE;
+        final String id = tag.getString(MODE);
+        for (final Mode mode : enabledModes()) {
+            if (mode.id().equals(id)) {
+                return mode;
+            }
+        }
+        return Mode.SIMPLE;
     }
 
     private static String modeName(final NBTTagCompound tag) {
-        if (modeOf(tag) == Mode.SIMPLE) {
-            return "tooltip.ae2stuff.wireless_kit.mode.simple";
-        }
-        return tag.getBoolean(LINKING) ? "tooltip.ae2stuff.wireless_kit.mode.queue_linking" : "tooltip.ae2stuff.wireless_kit.mode.queue_adding";
+        return switch (modeOf(tag)) {
+            case SIMPLE -> "tooltip.ae2stuff.wireless_kit.mode.simple";
+            case QUEUE -> tag.getBoolean(LINKING) ? "tooltip.ae2stuff.wireless_kit.mode.queue_linking"
+                    : "tooltip.ae2stuff.wireless_kit.mode.queue_adding";
+            case MANAGER -> "tooltip.ae2stuff.wireless_kit.mode.manager";
+        };
     }
 
     private static boolean hasBinding(final NBTTagCompound tag) {
@@ -335,6 +382,15 @@ public final class ItemWirelessKit extends AEBaseItem {
      */
     private static NBTTagCompound data(final ItemStack stack) {
         final NBTTagCompound tag = stack.hasTagCompound() ? stack.getTagCompound() : new NBTTagCompound();
+        migrateLegacy(tag);
+        return tag;
+    }
+
+    /**
+     * A copy to read from, which leaves the stack alone.
+     */
+    private static NBTTagCompound view(final ItemStack stack) {
+        final NBTTagCompound tag = stack.hasTagCompound() ? stack.getTagCompound().copy() : new NBTTagCompound();
         migrateLegacy(tag);
         return tag;
     }
@@ -391,7 +447,7 @@ public final class ItemWirelessKit extends AEBaseItem {
         return tile instanceof TileWirelessBase wireless ? wireless : null;
     }
 
-    private static void message(final EntityPlayer player, final TextFormatting color, final String key, final Object... args) {
+    static void message(final EntityPlayer player, final TextFormatting color, final String key, final Object... args) {
         final ITextComponent text = new TextComponentTranslation("chat.ae2stuff.wireless." + key, args);
         text.getStyle().setColor(color);
         player.sendStatusMessage(text, true);
@@ -401,41 +457,48 @@ public final class ItemWirelessKit extends AEBaseItem {
     @SideOnly(Side.CLIENT)
     protected void addCheckedInformation(final ItemStack stack, final World world, final List<String> lines,
             final ITooltipFlag advancedTooltips) {
-        final NBTTagCompound tag = stack.hasTagCompound() ? stack.getTagCompound().copy() : new NBTTagCompound();
-        migrateLegacy(tag);
+        final NBTTagCompound tag = view(stack);
         final String key = KitKeyHandler.keyName();
 
         lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.mode", I18n.format(modeName(tag))));
 
-        if (modeOf(tag) == Mode.SIMPLE) {
-            if (hasBinding(tag)) {
-                final BlockPos bound = posOf(tag.getCompoundTag(LOCATION));
-                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.bound", bound.getX(), bound.getY(), bound.getZ()));
-                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.next"));
-                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.clear"));
-            } else {
-                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.empty"));
-            }
-        } else {
-            final boolean linking = tag.getBoolean(LINKING);
-            final NBTTagList queue = tag.getTagList(QUEUE, Constants.NBT.TAG_COMPOUND);
-            if (queue.tagCount() == 0) {
-                lines.add(I18n.format(linking ? "tooltip.ae2stuff.wireless_kit.queue.empty_linking"
-                        : "tooltip.ae2stuff.wireless_kit.queue.empty_adding"));
-            } else {
-                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.size", queue.tagCount()));
-                for (int i = 0; i < Math.min(queue.tagCount(), TOOLTIP_ENTRIES); i++) {
-                    final BlockPos pos = posOf(queue.getCompoundTagAt(i));
-                    lines.add("  " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
-                }
-                if (queue.tagCount() > TOOLTIP_ENTRIES) {
-                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.more", queue.tagCount() - TOOLTIP_ENTRIES));
+        switch (modeOf(tag)) {
+            case SIMPLE -> {
+                if (hasBinding(tag)) {
+                    final BlockPos bound = posOf(tag.getCompoundTag(LOCATION));
+                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.bound", bound.getX(), bound.getY(), bound.getZ()));
+                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.next"));
+                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.clear"));
+                } else {
+                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.empty"));
                 }
             }
-            lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.toggle"));
-            lines.add(I18n.format(linking ? "tooltip.ae2stuff.wireless_kit.queue.hub_linking"
-                    : "tooltip.ae2stuff.wireless_kit.queue.hub_adding", key));
-            lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.clear", key));
+            case QUEUE -> {
+                final boolean linking = tag.getBoolean(LINKING);
+                final NBTTagList queue = tag.getTagList(QUEUE, Constants.NBT.TAG_COMPOUND);
+                if (queue.tagCount() == 0) {
+                    lines.add(I18n.format(linking ? "tooltip.ae2stuff.wireless_kit.queue.empty_linking"
+                            : "tooltip.ae2stuff.wireless_kit.queue.empty_adding"));
+                } else {
+                    lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.size", queue.tagCount()));
+                    for (int i = 0; i < Math.min(queue.tagCount(), TOOLTIP_ENTRIES); i++) {
+                        final BlockPos pos = posOf(queue.getCompoundTagAt(i));
+                        lines.add("  " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
+                    }
+                    if (queue.tagCount() > TOOLTIP_ENTRIES) {
+                        lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.more", queue.tagCount() - TOOLTIP_ENTRIES));
+                    }
+                }
+                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.toggle"));
+                lines.add(I18n.format(linking ? "tooltip.ae2stuff.wireless_kit.queue.hub_linking"
+                        : "tooltip.ae2stuff.wireless_kit.queue.hub_adding", key));
+                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.queue.clear", key));
+            }
+            case MANAGER -> {
+                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.manager.networks", KitNetworks.read(tag).size()));
+                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.manager.add"));
+                lines.add(I18n.format("tooltip.ae2stuff.wireless_kit.manager.open"));
+            }
         }
 
         if (enabledModes().size() > 1) {

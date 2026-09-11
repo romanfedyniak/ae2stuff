@@ -8,6 +8,8 @@ package ae2stuff.item;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentTranslation;
 
 import ae2stuff.core.AE2StuffConfig;
 import ae2stuff.tile.TileWirelessBase;
@@ -79,6 +81,21 @@ public final class WirelessLinker {
                 connector.unpairAll();
                 yield Result.FAILED;
             }
+        };
+    }
+
+    /**
+     * Why a link was refused, for a message. Not for {@link Result#LINKED}.
+     */
+    public static ITextComponent describe(final Result result, final TileWirelessBase a, final TileWirelessBase b) {
+        return switch (result) {
+            case NOT_ALLOWED -> new TextComponentTranslation("chat.ae2stuff.wireless.security.player");
+            case TWO_HUBS -> new TextComponentTranslation("chat.ae2stuff.wireless.two_hubs");
+            case HUB_FULL -> new TextComponentTranslation("chat.ae2stuff.wireless.hub_full");
+            case TOO_FAR -> new TextComponentTranslation("chat.ae2stuff.wireless.too_far", (int) Math.ceil(distance(a, b)),
+                    AE2StuffConfig.instance().getWirelessMaxRange());
+            case SECURITY -> new TextComponentTranslation("chat.ae2stuff.wireless.security.network");
+            case LINKED, FAILED -> new TextComponentTranslation("chat.ae2stuff.wireless.failed");
         };
     }
 

@@ -21,5 +21,8 @@ public final class ModNetwork {
 
     public static void init() {
         CHANNEL.registerMessage(PacketKitKey.Handler.class, PacketKitKey.class, 0, Side.SERVER);
+        CHANNEL.registerMessage(PacketKitAction.Handler.class, PacketKitAction.class, 1, Side.SERVER);
+        CHANNEL.registerMessage(PacketKitDevices.Handler.class, PacketKitDevices.class, 2, Side.CLIENT);
+        CHANNEL.registerMessage(PacketKitReturned.Handler.class, PacketKitReturned.class, 3, Side.CLIENT);
     }
 }

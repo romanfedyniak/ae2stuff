@@ -99,6 +99,19 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   - Linking links the next queued end to the clicked one, or with the key held on a hub, queued ends one after another
     until the hub is full.
   - The key with a sneak-right-click clears the queue. The tooltip lists the first ten queued ends.
+- **Manager mode** lists the connectors and hubs of chosen networks in a window.
+  - Right-clicking any block of a network lists that network, and sneak-right-clicking one removes it. A network
+    whose block is gone, or which has joined another listed network, drops off the list.
+  - Right-clicking the air opens the window, with every device of the listed networks in this dimension: its state
+    and channels, and on hover its position, network, power and colour.
+  - Devices are dragged from the list into "What to link" and "Link with", back again, or up and down a column to
+    change the order. "Link" links the two columns in pairs from the top, a hub taking devices until it is full, and
+    "Unlink" breaks every link of "What to link".
+  - Ctrl-left-clicking a device closes the window, outlines the device in red in the world as AE2UD does for a
+    machine it locates, and turns the player to face it. The result shows above the hotbar and each failure goes to chat
+    with its reason; devices that were done return to the list, and the rest stay.
+  - The window fits the screen and shows as many rows as there is room for, and HEI shows nothing beside it. It
+    refreshes every second while it is open.
 - **A hub can no longer be queued past its free slots.** Its slots already in the queue count against it, which they
   did not.
 - Both modes refuse networks the player may not build on, two hubs, a full hub and ends too far apart. A queued end
