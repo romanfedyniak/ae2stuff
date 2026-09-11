@@ -44,6 +44,8 @@ public final class GuiGrowthChamber extends GuiUpgradeable {
 
         this.buttonList.add(this.autoExport);
         this.buttonList.add(this.redstoneMode);
+        // initGui runs again after HEI's recipe screen closes, so the column is rebuilt rather than added to
+        this.column.clear();
         this.column.add(this.autoExport);
         this.column.add(this.redstoneMode);
     }
