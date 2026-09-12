@@ -15,6 +15,10 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 - **The Network Visualisation Tool is removed**, because AE2UD has a Network Visualiser of its own. One already in a
   world or an inventory becomes AE2UD's.
 - Only the English and Ukrainian translations ship. The partial translations into other languages are removed.
+- **HEI's buttons hung above the fluix recipe entry they belong to.** HEI stacks an entry's three buttons -
+  transfer, favourite and bookmark - upwards from the bottom edge of the recipe category, and the category was
+  one slot tall, which is shorter than those three buttons together. It is as tall as that column now, with the
+  row of slots centred in it.
 
 ### Crystal Growth Chamber
 

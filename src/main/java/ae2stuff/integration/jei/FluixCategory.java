@@ -36,6 +36,13 @@ final class FluixCategory implements IRecipeCategory<FluixRecipe> {
     private static final int ARROW_WIDTH = 24;
     private static final int OUTPUT_X = 104;
     private static final int INPUTS = 3;
+    /**
+     * HEI stacks an entry's three buttons upwards from the bottom edge of the category, so a shorter one
+     * leaves them hanging above the entry they belong to.
+     */
+    private static final int BUTTON_COLUMN = 13 * 3 + 4;
+    private static final int HEIGHT = Math.max(SLOT, BUTTON_COLUMN);
+    private static final int SLOT_TOP = (HEIGHT - SLOT) / 2;
 
     private final IDrawable background;
     private final IDrawable icon;
@@ -43,7 +50,7 @@ final class FluixCategory implements IRecipeCategory<FluixRecipe> {
     private final IDrawable arrow;
 
     FluixCategory(final IGuiHelper helper, final ItemStack chamber) {
-        this.background = helper.createBlankDrawable(WIDTH, SLOT);
+        this.background = helper.createBlankDrawable(WIDTH, HEIGHT);
         this.icon = helper.createDrawableIngredient(chamber);
         this.slot = helper.createDrawable(FURNACE, 55, 16, SLOT, SLOT);
         this.arrow = helper.createDrawable(FURNACE, 79, 35, ARROW_WIDTH, 17);
@@ -82,19 +89,19 @@ final class FluixCategory implements IRecipeCategory<FluixRecipe> {
     @Override
     public void drawExtras(final Minecraft minecraft) {
         for (int input = 0; input < INPUTS; input++) {
-            this.slot.draw(minecraft, inputX(input), 0);
+            this.slot.draw(minecraft, inputX(input), SLOT_TOP);
         }
-        this.arrow.draw(minecraft, ARROW_X, 0);
-        this.slot.draw(minecraft, OUTPUT_X, 0);
+        this.arrow.draw(minecraft, ARROW_X, SLOT_TOP);
+        this.slot.draw(minecraft, OUTPUT_X, SLOT_TOP);
     }
 
     @Override
     public void setRecipe(final IRecipeLayout layout, final FluixRecipe recipe, final IIngredients ingredients) {
         final IGuiItemStackGroup items = layout.getItemStacks();
         for (int input = 0; input < INPUTS; input++) {
-            items.init(input, true, inputX(input), 0);
+            items.init(input, true, inputX(input), SLOT_TOP);
         }
-        items.init(INPUTS, false, OUTPUT_X, 0);
+        items.init(INPUTS, false, OUTPUT_X, SLOT_TOP);
         items.set(ingredients);
     }
 }
