@@ -7,25 +7,24 @@
 package ae2stuff.network;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import ae2stuff.container.ContainerWirelessKit;
+import ae2stuff.container.KitSelection;
 
 /**
- * A button pressed in the manager window, with the devices in its columns.
+ * Link or Unlink pressed in the manager window, with the rows in its columns.
  */
 public final class PacketKitAction implements IMessage {
 
-    private static final int MAX_POSITIONS = 4096;
+    static final int MAX_ROWS = 4096;
 
     public enum Action {
         LINK,
@@ -33,13 +32,13 @@ public final class PacketKitAction implements IMessage {
     }
 
     private Action action;
-    private List<BlockPos> sources;
-    private List<BlockPos> targets;
+    private List<KitSelection> sources;
+    private List<KitSelection> targets;
 
     public PacketKitAction() {
     }
 
-    public PacketKitAction(final Action action, final List<BlockPos> sources, final List<BlockPos> targets) {
+    public PacketKitAction(final Action action, final List<KitSelection> sources, final List<KitSelection> targets) {
         this.action = action;
         this.sources = sources;
         this.targets = targets;
@@ -49,33 +48,33 @@ public final class PacketKitAction implements IMessage {
     public void fromBytes(final ByteBuf buf) {
         final int ordinal = buf.readByte();
         this.action = ordinal >= 0 && ordinal < Action.values().length ? Action.values()[ordinal] : null;
-        this.sources = readPositions(buf);
-        this.targets = readPositions(buf);
+        this.sources = readSelections(buf);
+        this.targets = readSelections(buf);
     }
 
     @Override
     public void toBytes(final ByteBuf buf) {
         buf.writeByte(this.action.ordinal());
-        writePositions(buf, this.sources);
-        writePositions(buf, this.targets);
+        writeSelections(buf, this.sources);
+        writeSelections(buf, this.targets);
     }
 
-    static List<BlockPos> readPositions(final ByteBuf buf) {
-        final int count = buf.readInt();
-        if (count < 0 || count > MAX_POSITIONS) {
-            return Collections.emptyList();
-        }
-        final List<BlockPos> positions = new ArrayList<>(count);
+    private static List<KitSelection> readSelections(final ByteBuf buf) {
+        final int count = Math.max(0, Math.min(buf.readInt(), MAX_ROWS));
+        final List<KitSelection> selections = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            positions.add(BlockPos.fromLong(buf.readLong()));
+            final KitSelection selection = KitSelection.read(buf);
+            if (selection != null) {
+                selections.add(selection);
+            }
         }
-        return positions;
+        return selections;
     }
 
-    static void writePositions(final ByteBuf buf, final List<BlockPos> positions) {
-        buf.writeInt(positions.size());
-        for (final BlockPos pos : positions) {
-            buf.writeLong(pos.toLong());
+    private static void writeSelections(final ByteBuf buf, final List<KitSelection> selections) {
+        buf.writeInt(selections.size());
+        for (final KitSelection selection : selections) {
+            selection.write(buf);
         }
     }
 

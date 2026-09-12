@@ -137,17 +137,22 @@ public final class KitNetworks {
 
     static void remove(final NBTTagCompound tag, final World world, final BlockPos pos, final EnumFacing side, final EntityPlayer player) {
         final IGrid grid = gridAt(world, pos, side);
-        final List<Anchor> anchors = read(tag);
-        final int before = anchors.size();
-        anchors.removeIf(anchor -> anchor.dimension == world.provider.getDimension()
+        final int dimension = world.provider.getDimension();
+        final int removed = removeWhere(tag, anchor -> anchor.dimension == dimension
                 && (anchor.pos.equals(pos) || grid != null && anchor.grid(world) == grid));
 
-        if (anchors.size() == before) {
+        if (removed == 0) {
             ItemWirelessKit.message(player, TextFormatting.RED, "manager.not_listed");
-            return;
+        } else {
+            ItemWirelessKit.message(player, TextFormatting.GREEN, "manager.removed", read(tag).size());
         }
-        write(tag, anchors);
-        ItemWirelessKit.message(player, TextFormatting.GREEN, "manager.removed", anchors.size());
+    }
+
+    /**
+     * Takes the network remembered by this block off the kit, from the manager window.
+     */
+    public static void forget(final NBTTagCompound tag, final BlockPos anchor, final int dimension) {
+        removeWhere(tag, candidate -> candidate.dimension == dimension && candidate.pos.equals(anchor));
     }
 
     /**
@@ -160,9 +165,8 @@ public final class KitNetworks {
             return;
         }
 
-        final List<Anchor> anchors = read(tag);
         final List<IGrid> seen = new ArrayList<>();
-        final boolean changed = anchors.removeIf(anchor -> {
+        final int removed = removeWhere(tag, anchor -> {
             if (anchor.dimension != world.provider.getDimension() || !world.isBlockLoaded(anchor.pos)) {
                 return false;
             }
@@ -174,9 +178,32 @@ public final class KitNetworks {
             return false;
         });
 
-        if (changed) {
-            write(tag, anchors);
+        if (removed > 0) {
             kit.setTagCompound(tag.isEmpty() ? null : tag);
         }
+    }
+
+    private interface AnchorTest {
+        boolean test(Anchor anchor);
+    }
+
+    /**
+     * Removes the matching networks along with their pins and group names.
+     */
+    private static int removeWhere(final NBTTagCompound tag, final AnchorTest test) {
+        final List<Anchor> kept = new ArrayList<>();
+        int removed = 0;
+        for (final Anchor anchor : read(tag)) {
+            if (test.test(anchor)) {
+                KitSettings.forgetNetwork(tag, anchor.pos, anchor.dimension);
+                removed++;
+            } else {
+                kept.add(anchor);
+            }
+        }
+        if (removed > 0) {
+            write(tag, kept);
+        }
+        return removed;
     }
 }

@@ -9,7 +9,9 @@ package ae2stuff.container;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -17,11 +19,13 @@ import javax.annotation.Nullable;
 
 import io.netty.buffer.ByteBuf;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 import ae2stuff.item.KitNetworks;
+import ae2stuff.item.KitSettings;
 import ae2stuff.tile.TileWirelessBase;
 import ae2stuff.tile.TileWirelessConnector;
 import ae2stuff.tile.TileWirelessHub;
@@ -32,7 +36,8 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.pathing.ChannelTiers;
 
 /**
- * What the manager window shows: the listed networks that can be seen right now, and every connector and hub on them.
+ * What the manager window shows: the listed networks that can be seen right now, every connector and hub on them,
+ * and how the window was left.
  */
 public final class KitManagerData {
 
@@ -41,18 +46,29 @@ public final class KitManagerData {
     /** The block each shown network is remembered by. */
     public final List<BlockPos> networks;
     public final List<Device> devices;
+    public final KitSettings.Grouping grouping;
+    public final boolean hideLinked;
+    public final List<KitEntry> pins;
+    public final Map<KitEntry, String> names;
 
-    private KitManagerData(final List<BlockPos> networks, final List<Device> devices) {
+    private KitManagerData(final List<BlockPos> networks, final List<Device> devices, final KitSettings.Grouping grouping,
+            final boolean hideLinked, final List<KitEntry> pins, final Map<KitEntry, String> names) {
         this.networks = networks;
         this.devices = devices;
+        this.grouping = grouping;
+        this.hideLinked = hideLinked;
+        this.pins = pins;
+        this.names = names;
     }
 
-    public static KitManagerData collect(final List<KitNetworks.Anchor> anchors, final World world) {
+    public static KitManagerData collect(@Nullable final NBTTagCompound kitTag, final World world) {
+        final NBTTagCompound tag = kitTag == null ? new NBTTagCompound() : kitTag;
+        final int dimension = world.provider.getDimension();
         final List<BlockPos> networks = new ArrayList<>();
         final List<Device> devices = new ArrayList<>();
         final Set<BlockPos> seen = new HashSet<>();
 
-        for (final KitNetworks.Anchor anchor : anchors) {
+        for (final KitNetworks.Anchor anchor : KitNetworks.read(tag)) {
             final IGrid grid = anchor.grid(world);
             if (grid == null) {
                 continue;
@@ -68,7 +84,9 @@ public final class KitManagerData {
                 }
             }
         }
-        return new KitManagerData(networks, devices);
+
+        return new KitManagerData(networks, devices, KitSettings.grouping(tag), KitSettings.hideLinked(tag),
+                KitSettings.pins(tag, dimension), KitSettings.names(tag, dimension));
     }
 
     public void write(final ByteBuf buf) {
@@ -79,6 +97,17 @@ public final class KitManagerData {
         buf.writeInt(this.devices.size());
         for (final Device device : this.devices) {
             device.write(buf);
+        }
+        buf.writeByte(this.grouping.ordinal());
+        buf.writeBoolean(this.hideLinked);
+        buf.writeInt(this.pins.size());
+        for (final KitEntry pin : this.pins) {
+            pin.write(buf);
+        }
+        buf.writeInt(this.names.size());
+        for (final Map.Entry<KitEntry, String> name : this.names.entrySet()) {
+            name.getKey().write(buf);
+            ByteBufUtils.writeUTF8String(buf, name.getValue());
         }
     }
 
@@ -93,17 +122,44 @@ public final class KitManagerData {
         for (int i = 0; i < deviceCount; i++) {
             devices.add(Device.read(buf));
         }
-        return new KitManagerData(networks, devices);
+
+        final int grouping = buf.readByte();
+        final boolean hideLinked = buf.readBoolean();
+
+        final int pinCount = Math.min(buf.readInt(), MAX_ENTRIES);
+        final List<KitEntry> pins = new ArrayList<>(pinCount);
+        for (int i = 0; i < pinCount; i++) {
+            final KitEntry pin = KitEntry.read(buf);
+            if (pin != null) {
+                pins.add(pin);
+            }
+        }
+        final int nameCount = Math.min(buf.readInt(), MAX_ENTRIES);
+        final Map<KitEntry, String> names = new LinkedHashMap<>();
+        for (int i = 0; i < nameCount; i++) {
+            final KitEntry entry = KitEntry.read(buf);
+            final String name = ByteBufUtils.readUTF8String(buf);
+            if (entry != null) {
+                names.put(entry, name);
+            }
+        }
+
+        return new KitManagerData(networks, devices,
+                grouping >= 0 && grouping < KitSettings.Grouping.values().length ? KitSettings.Grouping.values()[grouping]
+                        : KitSettings.Grouping.SINGLE,
+                hideLinked, pins, names);
     }
 
     @Override
     public boolean equals(final Object o) {
-        return o instanceof KitManagerData other && this.networks.equals(other.networks) && this.devices.equals(other.devices);
+        return o instanceof KitManagerData other && this.networks.equals(other.networks) && this.devices.equals(other.devices)
+                && this.grouping == other.grouping && this.hideLinked == other.hideLinked && this.pins.equals(other.pins)
+                && this.names.equals(other.names);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.networks, this.devices);
+        return Objects.hash(this.networks, this.devices, this.grouping, this.hideLinked, this.pins, this.names);
     }
 
     public static final class Device {

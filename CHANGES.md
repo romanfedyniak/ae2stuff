@@ -78,7 +78,7 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 - Looking at a connector or a hub draws a line to every end it is paired with, in the connector's colour, however
   many links a hub has. AE2UD's Network Visualiser draws wireless links in the connector's colour too.
 - Waila and The One Probe show what a connector is linked to or waiting for, how many links a hub has, the channels
-  in use, the power drawn and the colour.
+  in use, the power drawn, the name it was given and the colour.
 - A link draws power at both ends while it is up, by the old formula.
 - Links stay within one dimension and load no chunks.
 - `config/ae2stuff.cfg` has a `wireless` section: whether connectors and the Wireless Setup Kit exist, their power
@@ -110,6 +110,16 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   - Ctrl-left-clicking a device closes the window, outlines the device in red in the world as AE2UD does for a
     machine it locates, and turns the player to face it. The result shows above the hotbar and each failure goes to chat
     with its reason; devices that were done return to the list, and the rest stay.
+  - **Rows can be devices or groups.** A button cycles the grouping between none, by colour and by network; a group
+    row stands for a whole network, or for one colour on it, and moves between the columns as one. Two boxes on a
+    group row say whether Link and Unlink take its connectors and its hubs, and a group gives Link only the
+    connectors that are not linked and the hubs with room left.
+  - **Linked devices can be hidden** with the second button: connectors with a live link and full hubs drop out of
+    the window, and so do groups with nothing left to show.
+  - **Rows can be kept at the top** with the square on the right of a row, and **renamed** by double-clicking the
+    name. A device takes the name onto the block itself, as the quartz knife does, while a network's or a colour's
+    name is remembered by the kit. An empty name gives the row its own name back.
+  - A network row also has an ✕ that takes the network off the kit.
   - The window fits the screen and shows as many rows as there is room for, and HEI shows nothing beside it. It
     refreshes every second while it is open.
 - **A hub can no longer be queued past its free slots.** Its slots already in the queue count against it, which they

@@ -17,6 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import ae2stuff.Tags;
+import ae2stuff.integration.WirelessColors;
 import ae2stuff.tile.TileGrowthChamber;
 import ae2stuff.tile.TileWirelessBase;
 import ae2stuff.tile.TileWirelessConnector;
@@ -31,6 +32,7 @@ import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
 import mcjty.theoneprobe.api.ITheOneProbe;
 import mcjty.theoneprobe.api.ProbeMode;
+import mcjty.theoneprobe.api.TextStyleClass;
 
 /**
  * Handed to The One Probe by name through IMC. The text is sent as a translation key, so each player reads
@@ -57,7 +59,8 @@ public final class TheOneProbeModule implements Function<ITheOneProbe, Void>, IP
             final IBlockState state, final IProbeHitData data) {
         final TileEntity tile = world.getTileEntity(data.getPos());
         if (tile instanceof TileGrowthChamber chamber) {
-            info.text(key("top.ae2stuff.grower.growing") + " " + chamber.getGrowingStacks());
+            info.text(TextStyleClass.INFO + key("top.ae2stuff.grower.growing") + " " + TextStyleClass.OK
+                    + chamber.getGrowingStacks());
         } else if (tile instanceof TileWirelessBase wireless) {
             addWireless(info, wireless);
         }
@@ -66,25 +69,35 @@ public final class TheOneProbeModule implements Function<ITheOneProbe, Void>, IP
     private static void addWireless(final IProbeInfo info, final TileWirelessBase tile) {
         final boolean linked = tile.isLinked();
         if (tile instanceof TileWirelessHub hub) {
-            info.text(key("top.ae2stuff.wireless.links") + " " + hub.getLinkCount() + " / " + TileWirelessHub.getMaxConnections());
+            final int links = hub.getLinkCount();
+            final int max = TileWirelessHub.getMaxConnections();
+            final TextStyleClass style = links < max ? TextStyleClass.OK : TextStyleClass.WARNING;
+            info.text(TextStyleClass.INFO + key("top.ae2stuff.wireless.links") + " " + style + links + TextStyleClass.INFO + " / "
+                    + style + max);
         } else if (tile instanceof TileWirelessConnector connector && connector.getTarget() != null) {
             final BlockPos target = connector.getTarget();
-            info.text(key(linked ? "top.ae2stuff.wireless.linked" : "top.ae2stuff.wireless.waiting") + " " + target.getX() + ", "
+            info.text((linked ? TextStyleClass.OK : TextStyleClass.WARNING)
+                    + key(linked ? "top.ae2stuff.wireless.linked" : "top.ae2stuff.wireless.waiting") + " " + target.getX() + ", "
                     + target.getY() + ", " + target.getZ());
         } else {
-            info.text(key("top.ae2stuff.wireless.unlinked"));
+            info.text(TextStyleClass.WARNING + key("top.ae2stuff.wireless.unlinked"));
         }
 
         if (linked && AEConfig.instance().isFeatureEnabled(AEFeature.CHANNELS)) {
             final int capacity = ChannelTiers.capacityOf(tile.getChannelTier());
-            info.text(key("top.ae2stuff.wireless.channels") + " " + tile.getUsedChannels() + (capacity < 0 ? "" : " / " + capacity));
+            info.text(TextStyleClass.INFO + key("top.ae2stuff.wireless.channels") + " " + TextStyleClass.OK + tile.getUsedChannels()
+                    + (capacity < 0 ? "" : TextStyleClass.INFO + " / " + TextStyleClass.OK + capacity));
         }
         if (linked) {
-            info.text(key("top.ae2stuff.wireless.power") + " "
+            info.text(TextStyleClass.INFO + key("top.ae2stuff.wireless.power") + " " + TextStyleClass.OK
                     + String.format("%.1f", PowerMultiplier.CONFIG.multiply(tile.getPowerUse())) + " AE/t");
         }
+        if (tile.hasCustomInventoryName()) {
+            info.text(TextStyleClass.INFO + key("top.ae2stuff.wireless.name") + " " + TextStyleClass.OK
+                    + tile.getCustomInventoryName());
+        }
         if (tile.getColor() != AEColor.TRANSPARENT) {
-            info.text(key(tile.getColor().unlocalizedName));
+            info.text(WirelessColors.of(tile.getColor()) + key(tile.getColor().unlocalizedName));
         }
     }
 

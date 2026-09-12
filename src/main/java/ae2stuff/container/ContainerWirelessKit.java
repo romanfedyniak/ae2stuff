@@ -7,8 +7,12 @@
 package ae2stuff.container;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -17,6 +21,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -28,18 +33,21 @@ import net.minecraft.world.World;
 import ae2stuff.container.ManagerLinking.Outcome;
 import ae2stuff.item.ItemWirelessKit;
 import ae2stuff.item.KitNetworks;
+import ae2stuff.item.KitSettings;
 import ae2stuff.item.WirelessLinker;
 import ae2stuff.network.ModNetwork;
 import ae2stuff.network.PacketKitDevices;
+import ae2stuff.network.PacketKitEdit;
 import ae2stuff.network.PacketKitReturned;
 import ae2stuff.tile.TileWirelessBase;
+import ae2stuff.tile.TileWirelessConnector;
 import ae2stuff.tile.TileWirelessHub;
 import appeng.container.AEBaseContainer;
 import appeng.util.Platform;
 
 /**
  * The kit's manager window. It holds nothing; the server sends it the devices of the kit's networks, and it asks the
- * server to link and unlink them.
+ * server to link, unlink, rename and rearrange them.
  */
 public final class ContainerWirelessKit extends AEBaseContainer {
 
@@ -84,7 +92,7 @@ public final class ContainerWirelessKit extends AEBaseContainer {
     }
 
     private void send(final boolean force) {
-        final KitManagerData data = KitManagerData.collect(KitNetworks.read(this.kit().getTagCompound()), this.player().world);
+        final KitManagerData data = KitManagerData.collect(this.kit().getTagCompound(), this.player().world);
         if (force || !data.equals(this.lastSent)) {
             this.lastSent = data;
             ModNetwork.CHANNEL.sendTo(new PacketKitDevices(data), (EntityPlayerMP) this.player());
@@ -92,32 +100,33 @@ public final class ContainerWirelessKit extends AEBaseContainer {
     }
 
     /**
-     * Links the sources to the targets in pairs from the top, a hub taking sources until it is full.
+     * Links the sources to the targets in pairs from the top, a hub taking sources until it is full. A group row
+     * stands for its devices that are free to link.
      */
-    public void link(final List<BlockPos> sourcePositions, final List<BlockPos> targetPositions) {
+    public void link(final List<KitSelection> sourceRows, final List<KitSelection> targetRows) {
         final EntityPlayer player = this.player();
-        final List<TileWirelessBase> sources = this.resolve(sourcePositions);
-        final List<TileWirelessBase> targets = this.resolve(targetPositions);
+        final List<Member> sources = this.expand(sourceRows, true);
+        final List<Member> targets = this.expand(targetRows, true);
         final Set<Integer> takenTargets = new HashSet<>();
-        final List<BlockPos> returned = new ArrayList<>();
+        final Set<KitEntry> returned = new LinkedHashSet<>();
         final int[] linked = new int[1];
         final int[] failed = new int[1];
 
         ManagerLinking.run(sources.size(), targets.size(), new ManagerLinking.Attempt() {
             @Override
             public boolean hasRoom(final int target) {
-                return targets.get(target) instanceof TileWirelessHub hub ? hub.hasRoom() : !takenTargets.contains(target);
+                return targets.get(target).tile instanceof TileWirelessHub hub ? hub.hasRoom() : !takenTargets.contains(target);
             }
 
             @Override
             public Outcome link(final int s, final int t) {
-                final TileWirelessBase source = sources.get(s);
-                final TileWirelessBase target = targets.get(t);
+                final TileWirelessBase source = sources.get(s).tile;
+                final TileWirelessBase target = targets.get(t).tile;
                 final WirelessLinker.Result result = WirelessLinker.link(source, target, player);
                 if (result == WirelessLinker.Result.LINKED) {
                     linked[0]++;
-                    returned.add(source.getPos());
-                    returned.add(target.getPos());
+                    returned.add(sources.get(s).row);
+                    returned.add(targets.get(t).row);
                     if (!(target instanceof TileWirelessHub)) {
                         takenTargets.add(t);
                     }
@@ -138,26 +147,76 @@ public final class ContainerWirelessKit extends AEBaseContainer {
     }
 
     /**
-     * Takes down every link of the given devices, at both ends.
+     * Takes down every link of the given rows' devices, at both ends.
      */
-    public void unlink(final List<BlockPos> positions) {
+    public void unlink(final List<KitSelection> rows) {
         final EntityPlayer player = this.player();
-        final List<BlockPos> returned = new ArrayList<>();
+        final Set<KitEntry> returned = new LinkedHashSet<>();
+        int unlinked = 0;
         int failed = 0;
-        for (final TileWirelessBase tile : this.resolve(positions)) {
-            if (tile.canBeChangedBy(player)) {
-                tile.unpairAll();
-                returned.add(tile.getPos());
+        for (final Member member : this.expand(rows, false)) {
+            if (member.tile.canBeChangedBy(player)) {
+                member.tile.unpairAll();
+                returned.add(member.row);
+                unlinked++;
             } else {
                 failed++;
-                player.sendMessage(failure(tile, new TextComponentTranslation("chat.ae2stuff.wireless.security.player"), null));
+                player.sendMessage(failure(member.tile, new TextComponentTranslation("chat.ae2stuff.wireless.security.player"), null));
             }
         }
 
-        this.finish(returned, "manager.unlinked", returned.size(), failed);
+        this.finish(returned, "manager.unlinked", unlinked, failed);
     }
 
-    private void finish(final List<BlockPos> returned, final String summary, final int done, final int failed) {
+    public void edit(final PacketKitEdit.Action action, @Nullable final KitEntry entry, final int value, final String text) {
+        final ItemStack kit = this.kit();
+        final NBTTagCompound tag = kit.hasTagCompound() ? kit.getTagCompound() : new NBTTagCompound();
+        final int dimension = this.player().world.provider.getDimension();
+
+        switch (action) {
+            case GROUPING -> KitSettings.setGrouping(tag,
+                    value >= 0 && value < KitSettings.Grouping.values().length ? KitSettings.Grouping.values()[value] : KitSettings.Grouping.SINGLE);
+            case HIDE_LINKED -> KitSettings.setHideLinked(tag, value != 0);
+            case PIN, UNPIN -> {
+                if (entry != null) {
+                    KitSettings.setPinned(tag, entry, dimension, action == PacketKitEdit.Action.PIN);
+                }
+            }
+            case RENAME -> {
+                if (entry != null && entry.isGroup()) {
+                    KitSettings.rename(tag, entry, dimension, text.trim());
+                } else if (entry != null) {
+                    this.renameDevice(entry.pos, text.trim());
+                }
+            }
+            case FORGET -> {
+                if (entry != null && entry.kind == KitEntry.Kind.NETWORK) {
+                    KitNetworks.forget(tag, entry.pos, dimension);
+                }
+            }
+        }
+
+        kit.setTagCompound(tag.isEmpty() ? null : tag);
+        this.send(true);
+    }
+
+    private void renameDevice(final BlockPos pos, final String name) {
+        final EntityPlayer player = this.player();
+        final TileWirelessBase tile = this.resolve(pos);
+        if (tile == null) {
+            return;
+        }
+        if (!tile.canBeChangedBy(player)) {
+            final ITextComponent text = new TextComponentTranslation("chat.ae2stuff.wireless.security.player");
+            text.getStyle().setColor(TextFormatting.RED);
+            player.sendStatusMessage(text, true);
+            return;
+        }
+        tile.setCustomName(name.isEmpty() ? null : name);
+        tile.saveChanges();
+    }
+
+    private void finish(final Set<KitEntry> returned, final String summary, final int done, final int failed) {
         final EntityPlayer player = this.player();
         final ITextComponent text = new TextComponentTranslation("chat.ae2stuff.wireless." + summary, done, failed);
         text.getStyle().setColor(failed == 0 ? TextFormatting.GREEN : TextFormatting.GOLD);
@@ -165,7 +224,7 @@ public final class ContainerWirelessKit extends AEBaseContainer {
 
         KitNetworks.clean(this.kit(), player.world);
         this.send(true);
-        ModNetwork.CHANNEL.sendTo(new PacketKitReturned(returned), (EntityPlayerMP) player);
+        ModNetwork.CHANNEL.sendTo(new PacketKitReturned(new ArrayList<>(returned)), (EntityPlayerMP) player);
     }
 
     private static ITextComponent failure(final TileWirelessBase source, final ITextComponent reason, @Nullable final TileWirelessBase target) {
@@ -179,28 +238,76 @@ public final class ContainerWirelessKit extends AEBaseContainer {
     }
 
     /**
-     * Only devices the window was shown can be acted on; anything else a client names is ignored.
+     * A device standing in for the row it was put forward by.
      */
-    private List<TileWirelessBase> resolve(final List<BlockPos> positions) {
-        final List<TileWirelessBase> tiles = new ArrayList<>();
+    private static final class Member {
+
+        private final TileWirelessBase tile;
+        private final KitEntry row;
+
+        private Member(final TileWirelessBase tile, final KitEntry row) {
+            this.tile = tile;
+            this.row = row;
+        }
+    }
+
+    /**
+     * The devices behind the rows, each once. For Link a group gives only its connectors that are not paired and its
+     * hubs with room; a device put forward by itself is taken as it is.
+     */
+    private List<Member> expand(final List<KitSelection> rows, final boolean forLink) {
+        final List<Member> members = new ArrayList<>();
         if (this.lastSent == null) {
-            return tiles;
+            return members;
         }
 
-        final Set<BlockPos> shown = new HashSet<>();
+        final Map<BlockPos, KitManagerData.Device> shown = new HashMap<>();
         for (final KitManagerData.Device device : this.lastSent.devices) {
-            shown.add(device.pos);
+            shown.put(device.pos, device);
         }
 
-        final World world = this.player().world;
-        for (final BlockPos pos : positions) {
-            if (shown.contains(pos) && world.isBlockLoaded(pos)) {
-                final TileEntity tile = world.getTileEntity(pos);
-                if (tile instanceof TileWirelessBase wireless && !tiles.contains(wireless)) {
-                    tiles.add(wireless);
+        final Set<BlockPos> taken = new HashSet<>();
+        for (final KitSelection row : rows) {
+            if (!row.entry.isGroup()) {
+                final TileWirelessBase tile = shown.containsKey(row.entry.pos) ? this.resolve(row.entry.pos) : null;
+                if (tile != null && taken.add(tile.getPos())) {
+                    members.add(new Member(tile, row.entry));
+                }
+                continue;
+            }
+
+            final int network = this.lastSent.networks.indexOf(row.entry.pos);
+            final List<KitManagerData.Device> devices = new ArrayList<>();
+            for (final KitManagerData.Device device : this.lastSent.devices) {
+                if (device.network == network && (row.entry.kind != KitEntry.Kind.COLOR || device.color == row.entry.color)
+                        && (device.hub ? row.hubs : row.connectors)) {
+                    devices.add(device);
+                }
+            }
+            devices.sort(Comparator.comparing((KitManagerData.Device device) -> device.name, String.CASE_INSENSITIVE_ORDER)
+                    .thenComparing(device -> device.pos));
+
+            for (final KitManagerData.Device device : devices) {
+                final TileWirelessBase tile = this.resolve(device.pos);
+                if (tile == null || forLink && (tile instanceof TileWirelessConnector connector && connector.getTarget() != null
+                        || tile instanceof TileWirelessHub hub && !hub.hasRoom())) {
+                    continue;
+                }
+                if (taken.add(tile.getPos())) {
+                    members.add(new Member(tile, row.entry));
                 }
             }
         }
-        return tiles;
+        return members;
+    }
+
+    @Nullable
+    private TileWirelessBase resolve(final BlockPos pos) {
+        final World world = this.player().world;
+        if (!world.isBlockLoaded(pos)) {
+            return null;
+        }
+        final TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof TileWirelessBase wireless ? wireless : null;
     }
 }

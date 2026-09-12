@@ -19,6 +19,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
+import ae2stuff.integration.WirelessColors;
 import ae2stuff.tile.TileGrowthChamber;
 import ae2stuff.tile.TileWirelessBase;
 import ae2stuff.tile.TileWirelessConnector;
@@ -84,8 +85,12 @@ public final class AE2StuffWailaPlugin implements IWailaPlugin, IWailaDataProvid
         if (linked) {
             tooltip.add(line("waila.ae2stuff.wireless.power", String.format("%.1f", data.getDouble("power"))));
         }
+        final String name = data.getString("name");
+        if (!name.isEmpty()) {
+            tooltip.add(line("waila.ae2stuff.wireless.name", name));
+        }
         if (tile.getColor() != AEColor.TRANSPARENT) {
-            tooltip.add(line(tile.getColor().unlocalizedName));
+            tooltip.add(WirelessColors.of(tile.getColor()) + line(tile.getColor().unlocalizedName));
         }
     }
 
@@ -104,6 +109,7 @@ public final class AE2StuffWailaPlugin implements IWailaPlugin, IWailaDataProvid
             data.setBoolean("linked", wireless.isLinked());
             data.setInteger("used", wireless.getUsedChannels());
             data.setDouble("power", PowerMultiplier.CONFIG.multiply(wireless.getPowerUse()));
+            data.setString("name", wireless.hasCustomInventoryName() ? wireless.getCustomInventoryName() : "");
             if (wireless instanceof TileWirelessHub hub) {
                 data.setInteger("links", hub.getLinkCount());
                 data.setInteger("max", TileWirelessHub.getMaxConnections());
