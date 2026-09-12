@@ -20,6 +20,12 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   one slot tall, which is shorter than those three buttons together. It is as tall as that column now, with the
   row of slots centred in it.
 
+### Advanced Inscriber
+
+- **The arrow opens the Inscriber's recipes in HEI.** Clicking the arrow between what goes in and what comes out
+  shows them, and the arrow says so when hovered - in HEI's own words, so it is already translated. Only with a
+  recipe viewer installed.
+
 ### Crystal Growth Chamber
 
 - **What goes in and what comes out are kept apart.** The chamber had twenty-seven slots that held seeds and

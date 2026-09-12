@@ -12,6 +12,7 @@ import java.util.Collections;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
+import ae2stuff.client.gui.GuiAdvancedInscriber;
 import ae2stuff.client.gui.GuiWirelessKit;
 import ae2stuff.core.AE2StuffConfig;
 import ae2stuff.core.Registration;
@@ -44,6 +45,9 @@ public final class AE2StuffJeiPlugin implements IModPlugin {
 
         if (Registration.advancedInscriber != null) {
             registry.addRecipeCatalyst(new ItemStack(Registration.advancedInscriber), INSCRIBER);
+            registry.addRecipeClickArea(GuiAdvancedInscriber.class, GuiAdvancedInscriber.RECIPE_LEFT,
+                    GuiAdvancedInscriber.RECIPE_TOP, GuiAdvancedInscriber.RECIPE_WIDTH, GuiAdvancedInscriber.RECIPE_HEIGHT,
+                    INSCRIBER);
         }
 
         if (Registration.growthChamber == null) {

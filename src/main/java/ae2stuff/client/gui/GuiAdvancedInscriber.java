@@ -7,11 +7,13 @@
 package ae2stuff.client.gui;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.lwjgl.input.Mouse;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.resources.I18n;
+import net.minecraftforge.fml.common.Loader;
 
 import ae2stuff.container.ContainerAdvancedInscriber;
 import ae2stuff.tile.TileAdvancedInscriber;
@@ -31,6 +33,18 @@ import appeng.core.sync.packets.PacketConfigButton;
 public final class GuiAdvancedInscriber extends GuiUpgradeable {
 
     private static final String TEXTURE = "guis/inscriber.png";
+
+    /**
+     * The arrow between what goes in and what comes out. HEI opens the inscriber's recipes from there, which
+     * is where the eye looks for them - not the thin progress bar at the edge of the window.
+     */
+    public static final int RECIPE_LEFT = 82;
+    public static final int RECIPE_TOP = 39;
+    public static final int RECIPE_WIDTH = 26;
+    public static final int RECIPE_HEIGHT = 16;
+
+    /** Whether a recipe viewer is there to open, which is the only reason the arrow answers the mouse. */
+    private static final boolean RECIPE_VIEWER = Loader.isModLoaded("jei");
     private static final int PANEL_WIDTH = 176;
     /** Where AE2UD's inscriber texture keeps the player inventory, which this taller window puts lower. */
     private static final int TEXTURE_INVENTORY_TOP = 176 - 83;
@@ -76,6 +90,17 @@ public final class GuiAdvancedInscriber extends GuiUpgradeable {
 
         if (btn == this.separateSides || btn == this.autoExport || btn == this.bufferSize) {
             NetworkHandler.instance().sendToServer(new PacketConfigButton(((GuiImgButton) btn).getSetting(), Mouse.isButtonDown(1)));
+        }
+    }
+
+    @Override
+    public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
+        super.drawScreen(mouseX, mouseY, partialTicks);
+
+        // The line is HEI's own, so whoever has it installed already has it translated
+        if (RECIPE_VIEWER && mouseX >= this.guiLeft + RECIPE_LEFT && mouseX < this.guiLeft + RECIPE_LEFT + RECIPE_WIDTH
+                && mouseY >= this.guiTop + RECIPE_TOP && mouseY < this.guiTop + RECIPE_TOP + RECIPE_HEIGHT) {
+            this.drawHoveringText(Collections.singletonList(I18n.format("jei.tooltip.show.recipes")), mouseX, mouseY);
         }
     }
 
