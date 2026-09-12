@@ -64,7 +64,11 @@ public final class GuiWirelessKit extends AEBaseGui {
     private static final int MARGIN = 8;
     private static final int TOOLBAR = 16;
     private static final int HEADER = 12;
-    private static final int TOP = MARGIN + TOOLBAR + 4 + HEADER;
+    private static final int SWATCH = 8;
+    private static final int SWATCH_GAP = 1;
+    /** Where the row of colours sits, between the toolbar and the column headers. */
+    private static final int PALETTE = MARGIN + TOOLBAR + 4;
+    private static final int TOP = PALETTE + SWATCH + 4 + HEADER;
     private static final int ROW = 22;
     private static final int GAP = 6;
     private static final int SCROLLBAR = 12;
@@ -85,7 +89,9 @@ public final class GuiWirelessKit extends AEBaseGui {
     private static final String[] HEADERS = { "gui.ae2stuff.wireless_kit.list", "gui.ae2stuff.wireless_kit.sources",
             "gui.ae2stuff.wireless_kit.targets" };
     private static final String[] GROUPINGS = { "gui.ae2stuff.wireless_kit.grouping.single", "gui.ae2stuff.wireless_kit.grouping.color",
-            "gui.ae2stuff.wireless_kit.grouping.network" };
+            "gui.ae2stuff.wireless_kit.grouping.network", "gui.ae2stuff.wireless_kit.grouping.linked" };
+    /** How wide a tooltip of ours is allowed to run before it is broken into lines. */
+    private static final int TOOLTIP_WIDTH = 180;
 
     private static final int TEXT = 0x404040;
     private static final int LIVE = 0x1E7A1E;
@@ -269,6 +275,16 @@ public final class GuiWirelessKit extends AEBaseGui {
                     }
                 }
             }
+            case LINKED -> {
+                for (final BlockPos anchor : this.networks) {
+                    for (final boolean linked : new boolean[] { true, false }) {
+                        final KitEntry group = KitEntry.state(anchor, linked);
+                        if (!this.membersOf(group).isEmpty() && !this.allHidden(group)) {
+                            entries.add(group);
+                        }
+                    }
+                }
+            }
         }
         return entries;
     }
@@ -303,7 +319,12 @@ public final class GuiWirelessKit extends AEBaseGui {
 
         final List<KitManagerData.Device> members = new ArrayList<>();
         for (final KitManagerData.Device device : this.devices.values()) {
-            if (device.network == network && (entry.kind != KitEntry.Kind.COLOR || device.color == entry.color)) {
+            final boolean inGroup = switch (entry.kind) {
+                case COLOR -> device.color == entry.color;
+                case STATE -> device.live == (entry.color == 1);
+                default -> true;
+            };
+            if (device.network == network && inGroup) {
                 members.add(device);
             }
         }
@@ -316,7 +337,7 @@ public final class GuiWirelessKit extends AEBaseGui {
         return switch (entry.kind) {
             case DEVICE -> this.devices.containsKey(entry.pos);
             case NETWORK -> this.networks.contains(entry.pos);
-            case COLOR -> !this.membersOf(entry).isEmpty();
+            case COLOR, STATE -> !this.membersOf(entry).isEmpty();
         };
     }
 
@@ -347,9 +368,9 @@ public final class GuiWirelessKit extends AEBaseGui {
         this.groupingButton = new GuiSmallButton(2, this.guiLeft + MARGIN, this.guiTop + MARGIN, GROUPING_WIDTH, TOOLBAR, "");
         this.hideButton = new GuiSmallButton(3, this.groupingButton.x + GROUPING_WIDTH + 4, this.guiTop + MARGIN, HIDE_WIDTH, TOOLBAR, "");
         this.unlink = new GuiSmallButton(0, this.guiLeft + this.xSize - MARGIN - BUTTON_WIDTH, this.guiTop + MARGIN, BUTTON_WIDTH,
-                TOOLBAR, I18n.format("gui.ae2stuff.wireless_kit.unlink")).setTooltip(I18n.format("gui.ae2stuff.wireless_kit.unlink.tooltip"));
+                TOOLBAR, I18n.format("gui.ae2stuff.wireless_kit.unlink")).setTooltip(this.wrapped("gui.ae2stuff.wireless_kit.unlink.tooltip"));
         this.link = new GuiSmallButton(1, this.unlink.x - 4 - BUTTON_WIDTH, this.guiTop + MARGIN, BUTTON_WIDTH, TOOLBAR,
-                I18n.format("gui.ae2stuff.wireless_kit.link")).setTooltip(I18n.format("gui.ae2stuff.wireless_kit.link.tooltip"));
+                I18n.format("gui.ae2stuff.wireless_kit.link")).setTooltip(this.wrapped("gui.ae2stuff.wireless_kit.link.tooltip"));
         this.buttonList.add(this.groupingButton);
         this.buttonList.add(this.hideButton);
         this.buttonList.add(this.link);
@@ -361,6 +382,10 @@ public final class GuiWirelessKit extends AEBaseGui {
         this.updateToolbar();
         this.updateScrollbars();
         this.updateButtons();
+    }
+
+    private static int swatchX(final int index) {
+        return MARGIN + index * (SWATCH + SWATCH_GAP);
     }
 
     private int columnX(final int column) {
@@ -405,6 +430,7 @@ public final class GuiWirelessKit extends AEBaseGui {
         final int x = mouseX - offsetX;
         final int y = mouseY - offsetY;
         final Hit hovered = this.dragging ? null : this.hitAt(x, y);
+        this.drawPalette(this.swatchAt(x, y));
 
         for (int i = 0; i < this.columns.size(); i++) {
             final int left = this.columnX(i);
@@ -432,6 +458,19 @@ public final class GuiWirelessKit extends AEBaseGui {
             final String hint = I18n.format(this.received ? "gui.ae2stuff.wireless_kit.empty" : "gui.ae2stuff.wireless_kit.loading");
             this.fontRenderer.drawSplitString(hint, this.columnX(LIST) + 4, TOP + 4, this.columnWidth - 8, UNLINKED);
         }
+    }
+
+    /**
+     * The colours anything in "what to link" can be painted.
+     */
+    private void drawPalette(final int hovered) {
+        final AEColor[] colors = AEColor.values();
+        for (int i = 0; i < colors.length; i++) {
+            final int left = swatchX(i);
+            drawRect(left - 1, PALETTE - 1, left + SWATCH + 1, PALETTE + SWATCH + 1, i == hovered ? 0xFFFFFFFF : BOX_BORDER);
+            drawRect(left, PALETTE, left + SWATCH, PALETTE + SWATCH, 0xFF000000 | colors[i].mediumVariant);
+        }
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     /**
@@ -565,6 +604,15 @@ public final class GuiWirelessKit extends AEBaseGui {
             return;
         }
 
+        final int swatch = this.swatchAt(mouseX - this.guiLeft, mouseY - this.guiTop);
+        if (swatch >= 0) {
+            final List<String> lines = new ArrayList<>();
+            lines.add(I18n.format(AEColor.values()[swatch].unlocalizedName));
+            this.addWrapped(lines, TextFormatting.DARK_GRAY, "gui.ae2stuff.wireless_kit.palette.hint");
+            this.drawTooltip(mouseX, mouseY, lines);
+            return;
+        }
+
         final Hit hit = this.hitAt(mouseX - this.guiLeft, mouseY - this.guiTop);
         if (hit == null) {
             return;
@@ -573,7 +621,8 @@ public final class GuiWirelessKit extends AEBaseGui {
         final KitEntry entry = this.column(hit.column).get(hit.index);
         final Control control = this.controlAt(hit, mouseX - this.guiLeft, mouseY - this.guiTop);
         if (control != Control.NONE) {
-            this.drawTooltip(mouseX, mouseY, I18n.format(this.controlTooltip(entry, control)));
+            this.drawTooltip(mouseX, mouseY,
+                    this.fontRenderer.listFormattedStringToWidth(I18n.format(this.controlTooltip(entry, control)), TOOLTIP_WIDTH));
         } else {
             this.drawTooltip(mouseX, mouseY, this.tooltipOf(entry));
         }
@@ -599,10 +648,10 @@ public final class GuiWirelessKit extends AEBaseGui {
             this.deviceTooltip(this.devices.get(entry.pos), lines);
         }
 
-        lines.add(TextFormatting.DARK_GRAY + I18n.format("gui.ae2stuff.wireless_kit.hint.drag"));
-        lines.add(TextFormatting.DARK_GRAY + I18n.format(entry.isGroup() ? "gui.ae2stuff.wireless_kit.hint.highlight_group"
-                : "gui.ae2stuff.wireless_kit.hint.highlight"));
-        lines.add(TextFormatting.DARK_GRAY + I18n.format("gui.ae2stuff.wireless_kit.hint.rename"));
+        this.addWrapped(lines, TextFormatting.DARK_GRAY, "gui.ae2stuff.wireless_kit.hint.drag");
+        this.addWrapped(lines, TextFormatting.DARK_GRAY,
+                entry.isGroup() ? "gui.ae2stuff.wireless_kit.hint.highlight_group" : "gui.ae2stuff.wireless_kit.hint.highlight");
+        this.addWrapped(lines, TextFormatting.DARK_GRAY, "gui.ae2stuff.wireless_kit.hint.rename");
         return lines;
     }
 
@@ -677,6 +726,12 @@ public final class GuiWirelessKit extends AEBaseGui {
 
         for (final GuiScrollbar scrollbar : this.scrollbars) {
             scrollbar.click(this, x, y);
+        }
+
+        final int swatch = this.swatchAt(x, y);
+        if (swatch >= 0 && button == 0) {
+            this.recolor(swatch);
+            return;
         }
 
         final Hit hit = this.hitAt(x, y);
@@ -917,6 +972,27 @@ public final class GuiWirelessKit extends AEBaseGui {
         }
     }
 
+    private void recolor(final int color) {
+        if (this.column(SOURCES).isEmpty()) {
+            return;
+        }
+        ModNetwork.CHANNEL.sendToServer(
+                new PacketKitAction(PacketKitAction.Action.RECOLOR, this.selections(SOURCES), Collections.emptyList(), color));
+    }
+
+    private int swatchAt(final int x, final int y) {
+        if (y < PALETTE || y >= PALETTE + SWATCH) {
+            return -1;
+        }
+        for (int i = 0; i < AEColor.values().length; i++) {
+            final int left = swatchX(i);
+            if (x >= left && x < left + SWATCH) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private void send(final PacketKitEdit edit) {
         ModNetwork.CHANNEL.sendToServer(edit);
     }
@@ -1003,10 +1079,22 @@ public final class GuiWirelessKit extends AEBaseGui {
         if (entry.kind == KitEntry.Kind.NETWORK) {
             return AEApi.instance().definitions().blocks().controller().maybeStack(1).orElse(ItemStack.EMPTY);
         }
+        if (entry.kind == KitEntry.Kind.COLOR) {
+            return stackOf(false, colorOf(entry.color));
+        }
 
-        final KitManagerData.Device device = entry.isGroup() ? null : this.devices.get(entry.pos);
-        final Block block = device != null && device.hub ? Registration.wirelessHub : Registration.wirelessConnector;
-        final AEColor color = colorOf(device == null ? entry.color : device.color);
+        // A linked or unlinked group wears whatever its first device does
+        final KitManagerData.Device device = entry.isGroup() ? first(this.membersOf(entry)) : this.devices.get(entry.pos);
+        return device == null ? ItemStack.EMPTY : stackOf(device.hub, colorOf(device.color));
+    }
+
+    @Nullable
+    private static KitManagerData.Device first(final List<KitManagerData.Device> devices) {
+        return devices.isEmpty() ? null : devices.get(0);
+    }
+
+    private static ItemStack stackOf(final boolean hub, final AEColor color) {
+        final Block block = hub ? Registration.wirelessHub : Registration.wirelessConnector;
         return block == null ? ItemStack.EMPTY : new ItemStack(block, 1, BlockWireless.metaOf(color));
     }
 
@@ -1023,6 +1111,8 @@ public final class GuiWirelessKit extends AEBaseGui {
             }
             case NETWORK -> I18n.format("gui.ae2stuff.wireless_kit.network", entry.pos.getX(), entry.pos.getY(), entry.pos.getZ());
             case COLOR -> I18n.format(colorOf(entry.color).unlocalizedName);
+            case STATE -> I18n.format(entry.color == 1 ? "gui.ae2stuff.wireless_kit.group.linked"
+                    : "gui.ae2stuff.wireless_kit.group.unlinked");
         };
     }
 
@@ -1069,6 +1159,17 @@ public final class GuiWirelessKit extends AEBaseGui {
             return device.live ? LIVE : WAITING;
         }
         return UNLINKED;
+    }
+
+    /** A line of text broken up where it would otherwise run off as one long tooltip. */
+    private String wrapped(final String key) {
+        return String.join("\n", this.fontRenderer.listFormattedStringToWidth(I18n.format(key), TOOLTIP_WIDTH));
+    }
+
+    private void addWrapped(final List<String> lines, final TextFormatting color, final String key) {
+        for (final String line : this.fontRenderer.listFormattedStringToWidth(I18n.format(key), TOOLTIP_WIDTH)) {
+            lines.add(color + line);
+        }
     }
 
     private String trim(final String text, final int width) {

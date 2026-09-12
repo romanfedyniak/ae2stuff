@@ -34,7 +34,8 @@ public final class KitSettings {
     public enum Grouping {
         SINGLE,
         COLOR,
-        NETWORK
+        NETWORK,
+        LINKED
     }
 
     private KitSettings() {

@@ -23,13 +23,15 @@ public final class KitEntry {
     public enum Kind {
         DEVICE,
         NETWORK,
-        COLOR
+        COLOR,
+        /** The linked, or the unlinked, devices of a network. */
+        STATE
     }
 
     public final Kind kind;
     /** The device's position, or the block its network is remembered by. */
     public final BlockPos pos;
-    /** The colour's ordinal for a colour group, otherwise -1. */
+    /** The colour's ordinal for a colour group, 1 or 0 for a linked or unlinked group, otherwise -1. */
     public final int color;
 
     private KitEntry(final Kind kind, final BlockPos pos, final int color) {
@@ -48,6 +50,10 @@ public final class KitEntry {
 
     public static KitEntry color(final BlockPos anchor, final int color) {
         return new KitEntry(Kind.COLOR, anchor, color);
+    }
+
+    public static KitEntry state(final BlockPos anchor, final boolean linked) {
+        return new KitEntry(Kind.STATE, anchor, linked ? 1 : 0);
     }
 
     public boolean isGroup() {

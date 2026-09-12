@@ -23,6 +23,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -42,6 +43,7 @@ import ae2stuff.network.PacketKitReturned;
 import ae2stuff.tile.TileWirelessBase;
 import ae2stuff.tile.TileWirelessConnector;
 import ae2stuff.tile.TileWirelessHub;
+import appeng.api.util.AEColor;
 import appeng.container.AEBaseContainer;
 import appeng.util.Platform;
 
@@ -168,6 +170,32 @@ public final class ContainerWirelessKit extends AEBaseContainer {
         this.finish(returned, "manager.unlinked", unlinked, failed);
     }
 
+    /**
+     * Paints the rows' devices.
+     */
+    public void recolor(final List<KitSelection> rows, final int color) {
+        final EntityPlayer player = this.player();
+        int painted = 0;
+        int failed = 0;
+        for (final Member member : this.expand(rows, false)) {
+            if (!member.tile.canBeChangedBy(player)) {
+                failed++;
+                player.sendMessage(failure(member.tile, new TextComponentTranslation("chat.ae2stuff.wireless.security.player"), null));
+                continue;
+            }
+
+            final AEColor paint = AEColor.values()[Math.max(0, Math.min(color, AEColor.values().length - 1))];
+            if (member.tile.recolourBlock(EnumFacing.UP, paint, player)) {
+                painted++;
+            }
+        }
+
+        final ITextComponent text = new TextComponentTranslation("chat.ae2stuff.wireless.manager.recoloured", painted, failed);
+        text.getStyle().setColor(failed == 0 ? TextFormatting.GREEN : TextFormatting.GOLD);
+        player.sendStatusMessage(text, true);
+        this.send(true);
+    }
+
     public void edit(final PacketKitEdit.Action action, @Nullable final KitEntry entry, final int value, final String text) {
         final ItemStack kit = this.kit();
         final NBTTagCompound tag = kit.hasTagCompound() ? kit.getTagCompound() : new NBTTagCompound();
@@ -279,8 +307,12 @@ public final class ContainerWirelessKit extends AEBaseContainer {
             final int network = this.lastSent.networks.indexOf(row.entry.pos);
             final List<KitManagerData.Device> devices = new ArrayList<>();
             for (final KitManagerData.Device device : this.lastSent.devices) {
-                if (device.network == network && (row.entry.kind != KitEntry.Kind.COLOR || device.color == row.entry.color)
-                        && (device.hub ? row.hubs : row.connectors)) {
+                final boolean inGroup = switch (row.entry.kind) {
+                    case COLOR -> device.color == row.entry.color;
+                    case STATE -> device.live == (row.entry.color == 1);
+                    default -> true;
+                };
+                if (device.network == network && inGroup && (device.hub ? row.hubs : row.connectors)) {
                     devices.add(device);
                 }
             }

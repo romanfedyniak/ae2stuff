@@ -28,10 +28,13 @@ public final class PacketKitAction implements IMessage {
 
     public enum Action {
         LINK,
-        UNLINK
+        UNLINK,
+        RECOLOR
     }
 
     private Action action;
+    /** The colour's ordinal for RECOLOR. */
+    private int value;
     private List<KitSelection> sources;
     private List<KitSelection> targets;
 
@@ -39,6 +42,11 @@ public final class PacketKitAction implements IMessage {
     }
 
     public PacketKitAction(final Action action, final List<KitSelection> sources, final List<KitSelection> targets) {
+        this(action, sources, targets, 0);
+    }
+
+    public PacketKitAction(final Action action, final List<KitSelection> sources, final List<KitSelection> targets, final int value) {
+        this.value = value;
         this.action = action;
         this.sources = sources;
         this.targets = targets;
@@ -50,6 +58,7 @@ public final class PacketKitAction implements IMessage {
         this.action = ordinal >= 0 && ordinal < Action.values().length ? Action.values()[ordinal] : null;
         this.sources = readSelections(buf);
         this.targets = readSelections(buf);
+        this.value = buf.readInt();
     }
 
     @Override
@@ -57,6 +66,7 @@ public final class PacketKitAction implements IMessage {
         buf.writeByte(this.action.ordinal());
         writeSelections(buf, this.sources);
         writeSelections(buf, this.targets);
+        buf.writeInt(this.value);
     }
 
     private static List<KitSelection> readSelections(final ByteBuf buf) {
@@ -90,6 +100,7 @@ public final class PacketKitAction implements IMessage {
                 switch (message.action) {
                     case LINK -> kit.link(message.sources, message.targets);
                     case UNLINK -> kit.unlink(message.sources);
+                    case RECOLOR -> kit.recolor(message.sources, message.value);
                 }
             });
             return null;
