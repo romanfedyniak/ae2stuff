@@ -55,7 +55,8 @@ version = propertyString('mod_version')
 group = propertyString('root_package')
 
 base {
-    archivesName.set(propertyString('mod_id'))
+    // Not the mod id: a jar called after the mod this one forked reads as that mod's own build
+    archivesName.set(propertyString('archives_base_name'))
 }
 
 tasks.decompressDecompiledSources.enabled !propertyBool('change_minecraft_sources') || !layout.buildDirectory.dir('rfg/minecraft-src').get().asFile.exists()

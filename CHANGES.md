@@ -10,6 +10,8 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 
 ## Unreleased
 
+- **The jar is called `ae2stuff-ud`.** It was named after the mod id alone, so a build of this fork sat in a mods
+  folder under the same name as the AE2 Stuff it was forked from, with nothing but the version to tell them apart.
 - **Rewritten from scratch in Java.** The Scala code is gone, and so is BdLib, the library it was built on, so neither
   has to be installed any more.
 - **The Network Visualisation Tool is removed**, because AE2UD has a Network Visualiser of its own. One already in a
