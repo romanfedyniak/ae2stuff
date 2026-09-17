@@ -15,12 +15,12 @@ import net.minecraftforge.items.IItemHandler;
 import ae2stuff.tile.TileGrowthChamber;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
-import appeng.api.config.YesNo;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotOutput;
+import appeng.util.Platform;
 
 public final class ContainerGrowthChamber extends ContainerUpgradeable {
 
@@ -28,11 +28,23 @@ public final class ContainerGrowthChamber extends ContainerUpgradeable {
     public static final int INPUT_TOP = 18;
     public static final int OUTPUT_TOP = 86;
 
+    /** The export faces as AutoExport packs them for a window: chosen, with a taker, refused. */
     @GuiSync(20)
-    public YesNo autoExport = YesNo.NO;
+    public int autoExport;
+
+    private final TileGrowthChamber chamber;
 
     public ContainerGrowthChamber(final InventoryPlayer ip, final TileGrowthChamber chamber) {
         super(ip, chamber);
+        this.chamber = chamber;
+    }
+
+    @Override
+    public void detectAndSendChanges() {
+        if (Platform.isServer()) {
+            this.autoExport = this.chamber.getAutoExport().getSyncState();
+        }
+        super.detectAndSendChanges();
     }
 
     @Override
@@ -63,7 +75,6 @@ public final class ContainerGrowthChamber extends ContainerUpgradeable {
     protected void loadSettingsFromHost(final IConfigManager cm) {
         // Not the base implementation: the chamber registers no fuzzy mode, and asking for one would throw
         this.setRedStoneMode((RedstoneMode) cm.getSetting(Settings.REDSTONE_CONTROLLED));
-        this.autoExport = (YesNo) cm.getSetting(Settings.AUTO_EXPORT);
     }
 
     private static final class InputSlot extends AppEngSlot {

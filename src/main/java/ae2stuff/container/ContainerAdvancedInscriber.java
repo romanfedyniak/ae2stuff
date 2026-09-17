@@ -38,8 +38,9 @@ public final class ContainerAdvancedInscriber extends ContainerUpgradeable imple
     public int maxProcessingTime = -1;
     @GuiSync(22)
     public YesNo separateSides = YesNo.NO;
+    /** The export faces as AutoExport packs them for a window: chosen, with a taker, refused. */
     @GuiSync(23)
-    public YesNo autoExport = YesNo.NO;
+    public int autoExport;
     @GuiSync(24)
     public InscriberInputCapacity bufferSize = InscriberInputCapacity.SIXTY_FOUR;
 
@@ -121,6 +122,7 @@ public final class ContainerAdvancedInscriber extends ContainerUpgradeable imple
         if (Platform.isServer()) {
             this.processingTime = this.inscriber.getProcessingTime();
             this.maxProcessingTime = AE2StuffConfig.instance().getAdvancedInscriberCycleTicks();
+            this.autoExport = this.inscriber.getAutoExport().getSyncState();
         }
         super.detectAndSendChanges();
     }
@@ -129,7 +131,6 @@ public final class ContainerAdvancedInscriber extends ContainerUpgradeable imple
     protected void loadSettingsFromHost(final IConfigManager cm) {
         // Not the base implementation: the inscriber registers neither a redstone nor a fuzzy mode
         this.separateSides = (YesNo) cm.getSetting(Settings.INSCRIBER_SEPARATE_SIDES);
-        this.autoExport = (YesNo) cm.getSetting(Settings.AUTO_EXPORT);
         this.bufferSize = (InscriberInputCapacity) cm.getSetting(Settings.INSCRIBER_INPUT_CAPACITY);
     }
 

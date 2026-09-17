@@ -8,9 +8,10 @@ package ae2stuff.tile;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ import appeng.api.config.PowerMultiplier;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.api.implementations.IAutoExportHost;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IGrowableCrystal;
@@ -45,10 +47,13 @@ import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKeyType;
 import appeng.api.upgrades.CardTrait;
 import appeng.api.upgrades.CardTraits;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEPartLocation;
+import appeng.api.util.AutoExport;
 import appeng.api.util.IConfigManager;
 import appeng.me.GridAccessException;
 import appeng.parts.automation.BlockUpgradeInventory;
@@ -57,7 +62,6 @@ import appeng.tile.grid.AENetworkPowerTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
-import appeng.util.InventoryAdaptor;
 import appeng.util.UpgradeSpeedCalculations;
 import appeng.util.inv.InvOperation;
 import appeng.util.inv.WrapperChainedItemHandler;
@@ -65,7 +69,7 @@ import appeng.util.inv.WrapperFilteredItemHandler;
 import appeng.util.inv.filter.IAEItemFilter;
 
 public final class TileGrowthChamber extends AENetworkPowerTile
-        implements IGridTickable, IUpgradeableHost, IConfigManagerHost, IPowerChannelState {
+        implements IGridTickable, IUpgradeableHost, IConfigManagerHost, IPowerChannelState, IAutoExportHost {
 
     public static final int SLOTS = 27;
     public static final int UPGRADE_SLOTS = 4;
@@ -82,6 +86,7 @@ public final class TileGrowthChamber extends AENetworkPowerTile
             new WrapperFilteredItemHandler(this.output, new OutputFilter()));
     private final UpgradeInventory upgrades;
     private final IConfigManager settings = new ConfigManager(this);
+    private final AutoExport autoExport = new AutoExport(this, this::onAutoExportChanged);
 
     private YesNo lastRedstoneState = YesNo.UNDECIDED;
     private int ticksIntoCycle;
@@ -92,7 +97,6 @@ public final class TileGrowthChamber extends AENetworkPowerTile
         this.setInternalMaxPower(config.getGrowthChamberPowerCapacity());
         this.getProxy().setIdlePowerUsage(config.getGrowthChamberIdlePower());
 
-        this.settings.registerSetting(Settings.AUTO_EXPORT, YesNo.NO);
         this.settings.registerSetting(Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE);
         this.upgrades = new BlockUpgradeInventory(Registration.growthChamber, this, UPGRADE_SLOTS);
     }
@@ -174,7 +178,7 @@ public final class TileGrowthChamber extends AENetworkPowerTile
     }
 
     private boolean hasExportWork() {
-        if (this.settings.getSetting(Settings.AUTO_EXPORT) != YesNo.YES) {
+        if (!this.autoExport.isEnabled()) {
             return false;
         }
         for (int slot = 0; slot < SLOTS; slot++) {
@@ -294,7 +298,7 @@ public final class TileGrowthChamber extends AENetworkPowerTile
     }
 
     /**
-     * Hands one stack of the output to whatever sits against the chamber, a face at a time.
+     * Hands the output to whatever sits against the chosen faces.
      *
      * @return true if anything moved
      */
@@ -303,34 +307,36 @@ public final class TileGrowthChamber extends AENetworkPowerTile
             return false;
         }
 
-        for (final EnumFacing dir : EnumSet.allOf(EnumFacing.class)) {
-            final TileEntity neighbour = this.world.getTileEntity(this.pos.offset(dir));
-            final InventoryAdaptor target = neighbour == null ? null : InventoryAdaptor.getAdaptor(neighbour, dir.getOpposite());
-            if (target == null) {
+        boolean moved = false;
+        for (int slot = 0; slot < SLOTS; slot++) {
+            final ItemStack result = this.output.getStackInSlot(slot);
+            if (result.isEmpty()) {
                 continue;
             }
 
-            for (int slot = 0; slot < SLOTS; slot++) {
-                final ItemStack result = this.output.getStackInSlot(slot);
-                if (result.isEmpty()) {
-                    continue;
-                }
-
-                // Asked before anything is taken out, so a refusing neighbour costs no inventory change
-                final ItemStack refused = target.simulateAdd(result.copy());
-                final int movable = result.getCount() - refused.getCount();
-                if (movable <= 0) {
-                    continue;
-                }
-
-                final ItemStack leftOver = target.addItems(this.output.extractItem(slot, movable, false));
-                if (!leftOver.isEmpty()) {
-                    this.output.insertItem(slot, leftOver, false);
-                }
-                return true;
+            // Pushed before anything is taken out, so a push that goes nowhere changes nothing
+            final long pushed = this.autoExport.push(AEItemKey.of(result), result.getCount());
+            if (pushed > 0) {
+                this.output.extractItem(slot, (int) pushed, false);
+                moved = true;
             }
         }
-        return false;
+        return moved;
+    }
+
+    @Override
+    public AutoExport getAutoExport() {
+        return this.autoExport;
+    }
+
+    @Override
+    public Set<AEKeyType> getAutoExportTypes() {
+        return Collections.singleton(AEKeyType.items());
+    }
+
+    private void onAutoExportChanged() {
+        this.saveChanges();
+        this.wake();
     }
 
     private void setWorking(final boolean working) {
@@ -394,6 +400,7 @@ public final class TileGrowthChamber extends AENetworkPowerTile
         super.writeToNBT(data);
         this.upgrades.writeToNBT(data, "upgrades");
         this.settings.writeToNBT(data);
+        this.autoExport.writeToNBT(data);
         return data;
     }
 
@@ -407,6 +414,7 @@ public final class TileGrowthChamber extends AENetworkPowerTile
         }
         this.upgrades.readFromNBT(data, "upgrades");
         this.settings.readFromNBT(data);
+        this.autoExport.readFromNBT(data);
     }
 
     /**

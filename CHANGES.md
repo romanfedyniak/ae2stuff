@@ -33,7 +33,8 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   A crystal that has finished growing moves down by itself, and waits in its slot while there is no room.
   Automation can only put things into the top slots and only take them from the bottom ones.
 - **Auto-Export**, the same button AE2UD's Inscriber has, hands what the chamber made to the inventories against
-  it, a face at a time.
+  it. The button opens a panel of the chamber's six faces, and only the faces chosen there are pushed through,
+  in turn.
 - It takes a **Redstone Card** as well as Acceleration Cards, in four upgrade slots, so a signal can switch it on
   and off. Acceleration counts upgrade points rather than cards, so a card worth several points speeds it up by
   that many.
@@ -58,8 +59,9 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   same cycle, as long as the input, the plates the recipe uses up and the room in the output allow for them.
   Acceleration Cards still shorten the cycle, and power is charged for every item in the batch.
 - It has AE2UD's Inscriber's three buttons: **Automation Access Mode**, which decides whether each face reaches
-  one part of the machine or all of it, **Auto-Export**, and **Input Slot Stack Size**. With separate faces, the
-  top and bottom faces reach the plates. Access mode takes the place of the two lock toggles it had, since plates
+  one part of the machine or all of it, **Auto-Export**, which pushes the result through the faces chosen in its
+  panel, and **Input Slot Stack Size**. With separate faces, the top and bottom faces reach the plates and take
+  no result. Access mode takes the place of the two lock toggles it had, since plates
   can only be taken out through their own faces anyway.
 - Its five upgrade slots take up to five Acceleration Cards and three Capacity Cards, and they compete for the
   slots.
