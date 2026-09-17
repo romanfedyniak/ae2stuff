@@ -50,7 +50,7 @@ dependencies {
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
     runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
 
-    implementation rfg.deobf('com.github.romanfedyniak:AE2UD:926851deeb')
+    implementation rfg.deobf('com.github.romanfedyniak:AE2UD:bb8563727f')
     implementation 'mezz:jei:4.34.0'
     implementation rfg.deobf('curse.maven:top-245211:2667280')
     compileOnly 'curse.maven:hwyla-253449:2568751'
