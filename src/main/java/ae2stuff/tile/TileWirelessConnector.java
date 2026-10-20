@@ -199,13 +199,23 @@ public final class TileWirelessConnector extends TileWirelessBase implements IGr
         final boolean linked = peerNode != null && connectionBetween(node, peerNode) != null;
         final boolean inRange = this.target != null
                 && WirelessLink.inRange(AE2StuffConfig.instance().getWirelessMaxRange(), distance(this.pos, this.target));
+        if (!linked && this.isLinked()) {
+            this.refresh();
+            if (peer != null) {
+                peer.refresh();
+            }
+        }
 
         switch (WirelessLink.next(this.target != null, loaded, peer != null && peer.acceptsLinkFrom(this.pos), linked,
                 inRange, peer != null && peer.hasRoomFor(this.pos), peerNode != null)) {
             case KEEP:
                 this.failureLogged = false;
-                peer.onLinked(this.pos);
-                this.refresh();
+                // A live link is recounted when it comes up or goes down; recounting a hub on every check of
+                // every connector paired with it cost as much as all its links squared
+                if (!this.isLinked() || !peer.isLinked() || !peer.getLinkTargets().contains(this.pos)) {
+                    peer.onLinked(this.pos);
+                    this.refresh();
+                }
                 return TickRateModulation.IDLE;
             case CONNECT:
                 return this.connect(node, peer, peerNode) ? TickRateModulation.IDLE : TickRateModulation.URGENT;
