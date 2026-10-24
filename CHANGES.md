@@ -10,6 +10,8 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
 
 ## Unreleased
 
+- **Requires AE2UD 1.6.0 or newer.** AE2UD shares its mod id with AE2 and AE2 UEL, so the version range is
+  what keeps the game from starting with either of them in its place.
 - **The jar is called `ae2stuff-ud`.** It was named after the mod id alone, so a build of this fork sat in a mods
   folder under the same name as the AE2 Stuff it was forked from, with nothing but the version to tell them apart.
 - **Rewritten from scratch in Java.** The Scala code is gone, and so is BdLib, the library it was built on, so neither

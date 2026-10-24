@@ -31,8 +31,7 @@ import appeng.api.networking.visualiser.NetworkVisualisers;
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION, dependencies = AE2Stuff.DEPENDENCIES)
 public final class AE2Stuff {
 
-    // No version range until AE2UD 1.6.0 is tagged: a JitPack build of a commit reports a bare hash, which sorts below it
-    static final String DEPENDENCIES = "required-after:appliedenergistics2;after:theoneprobe;after:waila";
+    static final String DEPENDENCIES = "required-after:appliedenergistics2@[1.6.0,);after:theoneprobe;after:waila";
 
     public static final Logger LOG = LogManager.getLogger(Tags.MOD_ID);
 
