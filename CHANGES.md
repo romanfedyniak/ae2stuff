@@ -8,7 +8,7 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   Life or any other AE2 build.
 - Back up the world before installing or updating the mod.
 
-## Unreleased
+## 1.0.0 - 2026-10-24
 
 - **Requires AE2UD 1.6.0 or newer.** AE2UD shares its mod id with AE2 and AE2 UEL, so the version range is
   what keeps the game from starting with either of them in its place.
