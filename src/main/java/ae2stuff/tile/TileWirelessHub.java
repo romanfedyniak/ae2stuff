@@ -106,10 +106,24 @@ public final class TileWirelessHub extends TileWirelessBase {
         }
     }
 
+    /**
+     * Every check of every connector paired here lands on this, and each recount walks all of the hub's links: with
+     * many connectors that was the server's largest cost. A link already counted is left alone; a new one is
+     * counted when it is made ({@link #onConnected}) and a dropped one when it goes down.
+     */
     @Override
     void onLinked(final BlockPos connector) {
+        if (this.connectors.contains(connector) && this.isLinked()) {
+            return;
+        }
         this.addConnector(connector);
         super.onLinked(connector);
+    }
+
+    @Override
+    void onConnected(final BlockPos connector) {
+        this.addConnector(connector);
+        super.onConnected(connector);
     }
 
     @Override

@@ -161,7 +161,7 @@ public final class TileWirelessConnector extends TileWirelessBase implements IGr
         } catch (final FailedConnectionException e) {
             return LinkAttempt.FAILED;
         }
-        peer.onLinked(this.pos);
+        peer.onConnected(this.pos);
         this.refresh();
         return LinkAttempt.LINKED;
     }
@@ -193,6 +193,10 @@ public final class TileWirelessConnector extends TileWirelessBase implements IGr
 
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        // A connector whose chunk unloaded linked its dead node to the hub again, and so kept ticking
+        if (this.isInvalid() || node != this.getProxy().getNode()) {
+            return TickRateModulation.SLEEP;
+        }
         final boolean loaded = this.target != null && this.world.isBlockLoaded(this.target);
         final TileWirelessBase peer = loaded ? this.loadedPeer(this.target) : null;
         final IGridNode peerNode = peer == null ? null : peer.getProxy().getNode();
@@ -248,7 +252,7 @@ public final class TileWirelessConnector extends TileWirelessBase implements IGr
         }
 
         this.failureLogged = false;
-        peer.onLinked(this.pos);
+        peer.onConnected(this.pos);
         this.refresh();
         return true;
     }

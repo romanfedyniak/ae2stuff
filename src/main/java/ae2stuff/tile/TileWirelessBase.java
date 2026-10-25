@@ -76,9 +76,16 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     protected abstract double linkPower(double distance);
 
     /**
-     * A connector's link to this end came up or was checked.
+     * A connector's link to this end was checked and is up.
      */
     void onLinked(final BlockPos connector) {
+        this.refresh();
+    }
+
+    /**
+     * A connector's link to this end was just made.
+     */
+    void onConnected(final BlockPos connector) {
         this.refresh();
     }
 

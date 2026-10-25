@@ -8,6 +8,14 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   Life or any other AE2 build.
 - Back up the world before installing or updating the mod.
 
+## Unreleased
+
+- **A wireless connector whose chunk unloads no longer leaves a ghost linked to its hub.** The unloaded connector
+  went on ticking and joined its dead network node to the hub again, one more for every time its chunk loaded;
+  each check of each ghost recounted the hub. On a server with hubs this grew with uptime into the largest part of
+  the tick.
+- A hub recounts its links when one is made or goes down, not on every check of a link that is already counted.
+
 ## 1.0.0 - 2026-10-24
 
 - **Requires AE2UD 1.6.0 or newer.** AE2UD shares its mod id with AE2 and AE2 UEL, so the version range is
