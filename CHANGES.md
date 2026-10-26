@@ -8,7 +8,7 @@ All notable AE2 Stuff Unofficial Deconstructed changes are grouped by the versio
   Life or any other AE2 build.
 - Back up the world before installing or updating the mod.
 
-## Unreleased
+## 1.0.1 - 2026-10-26
 
 - **A wireless connector whose chunk unloads no longer leaves a ghost linked to its hub.** The unloaded connector
   went on ticking and joined its dead network node to the hub again, one more for every time its chunk loaded;
